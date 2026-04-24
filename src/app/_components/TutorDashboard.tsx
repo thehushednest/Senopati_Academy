@@ -14,6 +14,7 @@ import { UserName } from "./UserName";
 import { prisma } from "../../lib/prisma";
 import { findModule } from "../../lib/content";
 import { getCurrentUser } from "../../lib/session";
+import { getMyTaughtSlugs } from "../../lib/tutor-scope";
 
 function relativeTime(d: Date | string) {
   const then = new Date(d).getTime();
@@ -39,18 +40,31 @@ export async function TutorDashboard() {
   const excludeOwn =
     viewer && viewer.role === "tutor" ? { NOT: { studentId: viewer.id } } : {};
 
+  // Scope berdasarkan modul yang tutor ampu. Null = admin (all).
+  const taughtSlugs = await getMyTaughtSlugs();
+  const scopeFilter =
+    Array.isArray(taughtSlugs) && taughtSlugs.length > 0
+      ? { moduleSlug: { in: taughtSlugs } }
+      : {};
+  const threadScopeFilter =
+    Array.isArray(taughtSlugs) && taughtSlugs.length > 0
+      ? { moduleSlug: { in: taughtSlugs } }
+      : {};
+  const hasScope = Array.isArray(taughtSlugs) && taughtSlugs.length > 0;
+
   const [studentCount, pendingReviews, reviewingReviews, queueItems, recentEnrollments, threadsPending] =
     await Promise.all([
       prisma.user.count({ where: { role: "student" } }),
-      prisma.assignmentSubmission.count({ where: { status: "submitted", ...excludeOwn } }),
-      prisma.assignmentSubmission.count({ where: { status: "reviewing", ...excludeOwn } }),
+      prisma.assignmentSubmission.count({ where: { status: "submitted", ...excludeOwn, ...scopeFilter } }),
+      prisma.assignmentSubmission.count({ where: { status: "reviewing", ...excludeOwn, ...scopeFilter } }),
       prisma.assignmentSubmission.findMany({
-        where: { status: "submitted", ...excludeOwn },
+        where: { status: "submitted", ...excludeOwn, ...scopeFilter },
         orderBy: { submittedAt: "desc" },
         take: 5,
         include: { student: { select: { id: true, name: true, avatarUrl: true } } },
       }),
       prisma.moduleProgress.findMany({
+        where: scopeFilter,
         orderBy: { startedAt: "desc" },
         take: 5,
         select: {
@@ -60,6 +74,7 @@ export async function TutorDashboard() {
         },
       }),
       prisma.discussionThread.findMany({
+        where: threadScopeFilter,
         orderBy: { updatedAt: "desc" },
         take: 6,
         include: {
@@ -69,9 +84,10 @@ export async function TutorDashboard() {
       }),
     ]);
 
-  // Modul yang sedang dipelajari siswa (aggregate). Untuk sekarang ambil top modules by count.
+  // Modul yang sedang dipelajari siswa (aggregate) — scope ke modul tutor kalau ada.
   const moduleEnrollments = await prisma.moduleProgress.groupBy({
     by: ["moduleSlug"],
+    where: scopeFilter,
     _count: { _all: true },
     _avg: { completedSessions: true, totalSessions: true },
     _max: { updatedAt: true },
@@ -79,7 +95,7 @@ export async function TutorDashboard() {
     take: 4,
   });
 
-  const totalEnrollments = await prisma.moduleProgress.count();
+  const totalEnrollments = await prisma.moduleProgress.count({ where: scopeFilter });
   const unansweredThreads = threadsPending.filter((t) => t._count.replies === 0);
 
   return (
@@ -92,17 +108,28 @@ export async function TutorDashboard() {
 
           <div className="tutor-hero">
             <div>
-              <p className="eyebrow eyebrow--brand">Tutor Dashboard</p>
+              <p className="eyebrow eyebrow--brand">
+                Tutor Dashboard
+                {hasScope ? ` · ${taughtSlugs!.length} modul diampu` : ""}
+              </p>
               <h1>
                 Halo, <UserName fallback="Tutor" />.
               </h1>
               <p>
                 {pendingReviews === 0 && reviewingReviews === 0
-                  ? "Tidak ada tugas menunggu review saat ini."
-                  : `${pendingReviews} tugas menunggu review${reviewingReviews > 0 ? `, ${reviewingReviews} sedang di-review` : ""}.`}{" "}
+                  ? `Tidak ada tugas menunggu review${hasScope ? " di modul yang kamu ampu" : ""}.`
+                  : `${pendingReviews} tugas menunggu review${reviewingReviews > 0 ? `, ${reviewingReviews} sedang di-review` : ""}${hasScope ? " di modulmu" : ""}.`}{" "}
                 {unansweredThreads.length > 0
                   ? `${unansweredThreads.length} thread diskusi belum dibalas.`
                   : "Semua thread diskusi sudah dibalas."}
+                {viewer?.role === "tutor" && !hasScope ? (
+                  <>
+                    {" "}
+                    <strong style={{ color: "#b45309" }}>
+                      Akunmu belum di-map ke mentor track.
+                    </strong>
+                  </>
+                ) : null}
               </p>
               <div className="tutor-hero__actions">
                 <Link className="button button--primary" href="/tutor/review">

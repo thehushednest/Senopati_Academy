@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../../../lib/prisma";
 import { requireTutor } from "../../../../lib/session";
 import { handleApiError } from "../../../../lib/api-utils";
+import { getMyTaughtSlugs } from "../../../../lib/tutor-scope";
 
 const STATUS_VALUES = ["submitted", "reviewing", "approved", "needs_revision"] as const;
 type Status = (typeof STATUS_VALUES)[number];
@@ -17,6 +18,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const moduleSlug = searchParams.get("moduleSlug");
+    const scope = searchParams.get("scope") ?? "mine"; // mine | all
     const limit = Math.min(100, Math.max(1, Number.parseInt(searchParams.get("limit") ?? "50", 10) || 50));
 
     // Guard: tutor tidak melihat submission miliknya sendiri (tidak self-review).
@@ -24,7 +26,14 @@ export async function GET(req: NextRequest) {
     const excludeOwn =
       tutor.role === "tutor" ? { NOT: { studentId: tutor.id } } : {};
 
-    const where: Prisma.AssignmentSubmissionWhereInput = { ...excludeOwn };
+    // Scope: default "mine" — hanya modul yang tutor ampu.
+    const taughtSlugs = await getMyTaughtSlugs();
+    const scopeFilter =
+      scope === "mine" && Array.isArray(taughtSlugs) && taughtSlugs.length > 0
+        ? { moduleSlug: { in: taughtSlugs } }
+        : {};
+
+    const where: Prisma.AssignmentSubmissionWhereInput = { ...excludeOwn, ...scopeFilter };
     if (isStatus(status)) where.status = status;
     if (moduleSlug) where.moduleSlug = moduleSlug;
 
@@ -39,7 +48,7 @@ export async function GET(req: NextRequest) {
       }),
       prisma.assignmentSubmission.groupBy({
         by: ["status"],
-        where: excludeOwn,
+        where: { ...excludeOwn, ...scopeFilter },
         _count: { _all: true },
       }),
     ]);

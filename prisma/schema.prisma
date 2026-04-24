@@ -27,6 +27,9 @@ model User {
   avatarUrl     String?   @map("avatar_url")
   school        String?
   grade         String?
+  // Untuk user dengan role=tutor: slug mentor dari content.ts (mis. "reza-adityawan").
+  // Digunakan untuk scope "modul saya" di /tutor/modul & filter di /tutor/review.
+  mentorSlug    String?   @map("mentor_slug")
   emailVerified DateTime? @map("email_verified")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
