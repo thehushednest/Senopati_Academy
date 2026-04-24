@@ -468,15 +468,15 @@ export default async function HomePage() {
               <div className="testimonial-feature__metrics">
                 <div>
                   <strong>89%</strong>
-                  <span>completion rate</span>
+                  <span>Completion rate</span>
                 </div>
                 <div>
-                  <strong>3.8x</strong>
-                  <span>faster brief output</span>
+                  <strong>3.8×</strong>
+                  <span>Faster brief output</span>
                 </div>
                 <div>
                   <strong>12</strong>
-                  <span>templates in toolkit</span>
+                  <span>Toolkit templates</span>
                 </div>
               </div>
             </article>
