@@ -3,11 +3,14 @@ import Link from "next/link";
 import {
   ArrowRightIcon,
   BookIcon,
+  CheckIcon,
   CompassIcon,
   SparklesIcon,
   UsersIcon
 } from "../../_components/Icon";
 import { OnboardingSteps } from "../../_components/OnboardingSteps";
+import { prisma } from "../../../lib/prisma";
+import { getCurrentUser } from "../../../lib/session";
 
 export const metadata: Metadata = {
   title: "Selamat Datang — Onboarding",
@@ -35,11 +38,53 @@ const BENEFITS = [
   }
 ];
 
-export default function OnboardingWelcomePage() {
+export default async function OnboardingWelcomePage() {
+  const user = await getCurrentUser();
+  const pref = user
+    ? await prisma.userPreference.findUnique({ where: { userId: user.id } })
+    : null;
+  const alreadyOnboarded = Boolean(pref?.onboardedAt);
+
   return (
     <main className="academy-shell onboarding-shell">
       <div className="container">
         <OnboardingSteps current={1} />
+
+        {alreadyOnboarded ? (
+          <section
+            aria-label="Sudah onboarded"
+            style={{
+              marginTop: 20,
+              padding: "16px 20px",
+              borderRadius: 14,
+              background: "rgba(24, 194, 156, 0.08)",
+              border: "1px solid rgba(24, 194, 156, 0.22)",
+              display: "flex",
+              gap: 14,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <span style={{ color: "var(--brand-strong)", display: "inline-flex" }}>
+              <CheckIcon size={18} />
+            </span>
+            <div style={{ flex: "1 1 260px", minWidth: 0 }}>
+              <strong>Kamu sudah pernah onboarding.</strong>{" "}
+              <span style={{ color: "var(--muted)" }}>
+                Langsung ke dashboard, atau perbarui profil kalau tujuan belajarmu berubah.
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Link className="button button--primary button--sm" href="/dashboard">
+                Ke Dashboard
+                <ArrowRightIcon size={14} />
+              </Link>
+              <Link className="button button--secondary button--sm" href="/onboarding/profil">
+                Perbarui Profil
+              </Link>
+            </div>
+          </section>
+        ) : null}
 
         <section className="onboarding-hero" aria-label="Selamat datang">
           <div className="onboarding-hero__badge">
@@ -55,7 +100,7 @@ export default function OnboardingWelcomePage() {
           </p>
           <div className="onboarding-hero__cta">
             <Link className="button button--primary" href="/onboarding/profil">
-              Mulai Setup Profil
+              {alreadyOnboarded ? "Perbarui Profil" : "Mulai Setup Profil"}
               <ArrowRightIcon size={16} />
             </Link>
             <Link className="button button--secondary" href="/modul">

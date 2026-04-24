@@ -9,6 +9,8 @@ import {
   modulesByCategory,
   type Module
 } from "../../../lib/content";
+import { prisma } from "../../../lib/prisma";
+import { getCurrentUser } from "../../../lib/session";
 
 export const metadata: Metadata = {
   title: "Rekomendasi Modul — Onboarding",
@@ -101,12 +103,33 @@ export default async function OnboardingRecommendationPage({
 }) {
   const query = await searchParams;
 
-  const name = typeof query.nama === "string" ? query.nama : "";
-  const role = typeof query.peran === "string" ? query.peran : undefined;
-  const goal = typeof query.tujuan === "string" ? query.tujuan : undefined;
-  const time = typeof query.waktu === "string" ? query.waktu : undefined;
-  const interestsRaw = typeof query.minat === "string" ? query.minat : "";
-  const interests = interestsRaw ? interestsRaw.split(",").filter(Boolean) : [];
+  // Prioritas: URL params (dari form yang baru submit) → UserPreference di DB → empty.
+  // URL params sebagai override supaya user yang edit profil bisa preview tanpa
+  // harus save ulang, walau biasanya ProfileForm sudah persist sebelum redirect.
+  const user = await getCurrentUser();
+  const pref = user
+    ? await prisma.userPreference.findUnique({ where: { userId: user.id } })
+    : null;
+
+  const queryName = typeof query.nama === "string" ? query.nama : "";
+  const queryRole = typeof query.peran === "string" ? query.peran : undefined;
+  const queryGoal = typeof query.tujuan === "string" ? query.tujuan : undefined;
+  const queryTime = typeof query.waktu === "string" ? query.waktu : undefined;
+  const queryInterestsRaw = typeof query.minat === "string" ? query.minat : "";
+  const queryInterests = queryInterestsRaw
+    ? queryInterestsRaw.split(",").filter(Boolean)
+    : [];
+
+  const name = queryName || pref?.nickname || "";
+  const role = queryRole ?? pref?.learnerRole ?? undefined;
+  const goal = queryGoal ?? pref?.learningGoal ?? undefined;
+  const time = queryTime ?? pref?.timeBudget ?? undefined;
+  const interests =
+    queryInterests.length > 0
+      ? queryInterests
+      : Array.isArray(pref?.interestsJson)
+      ? (pref!.interestsJson as string[])
+      : [];
 
   const hasProfile = Boolean(role && goal && time && interests.length > 0);
 

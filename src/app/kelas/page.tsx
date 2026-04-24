@@ -19,6 +19,7 @@ import {
   findMentor,
   findModule
 } from "../../lib/content";
+import { getMyActiveModules } from "../../lib/progress-server";
 
 export const metadata: Metadata = {
   title: "Kelas Aktif",
@@ -28,7 +29,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/kelas" }
 };
 
-export default function KelasAktifPage() {
+export default async function KelasAktifPage() {
+  const myActive = await getMyActiveModules();
+  const hasRealProgress = myActive.length > 0;
+  const activeModules = hasRealProgress ? myActive : ACTIVE_MODULES;
+
   return (
     <main className="academy-shell dashboard-shell">
       <div className="container dashboard-app">
@@ -40,10 +45,15 @@ export default function KelasAktifPage() {
           <header className="dashboard-page-header">
             <div>
               <p className="eyebrow eyebrow--brand">Kelas Aktif</p>
-              <h1>Semua modul yang sedang kamu kerjakan</h1>
+              <h1>
+                {hasRealProgress
+                  ? "Semua modul yang sedang kamu kerjakan"
+                  : "Belum ada modul aktif"}
+              </h1>
               <p>
-                {ACTIVE_MODULES.length} modul aktif — klik salah satu untuk lanjut ke sesi
-                terakhir. Progress tersimpan otomatis.
+                {hasRealProgress
+                  ? `${activeModules.length} modul aktif — klik salah satu untuk lanjut ke sesi terakhir. Progress tersimpan otomatis.`
+                  : "Mulai modul pertamamu dari katalog. Contoh di bawah ini adalah tampilan ketika kamu sudah punya modul aktif."}
               </p>
             </div>
             <Link className="button button--secondary" href="/modul">
@@ -54,7 +64,7 @@ export default function KelasAktifPage() {
 
           <div className="dashboard-section">
             <div className="kelas-aktif-list">
-              {ACTIVE_MODULES.map((active) => {
+              {activeModules.map((active) => {
                 const mod = findModule(active.moduleSlug);
                 const category = mod ? findCategory(mod.categorySlug) : null;
                 const mentor = mod ? findMentor(mod.mentorSlug) : null;
