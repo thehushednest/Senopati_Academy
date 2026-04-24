@@ -65,7 +65,27 @@ export default async function DashboardPage() {
   const myActive = await getMyActiveModules();
   const activeModules = myActive.length > 0 ? myActive : ACTIVE_MODULES;
   const hasRealProgress = myActive.length > 0;
-  const continueModule = activeModules[0];
+
+  // Prioritaskan modul yang belum selesai sebagai "continue". Kalau semua sudah
+  // selesai, continueModule tetap ada tapi CTA dialihkan.
+  const inProgressModules = myActive.filter((m) => m.completed < m.total);
+  const continueModule = inProgressModules[0] ?? activeModules[0];
+  const continueModuleCompleted = Boolean(
+    continueModule && continueModule.completed >= continueModule.total,
+  );
+  const continueSessionIndex = continueModule
+    ? Math.min(continueModule.completed, Math.max(0, continueModule.total - 1))
+    : 0;
+  const continueHref = !continueModule
+    ? "/modul"
+    : continueModuleCompleted
+    ? `/belajar/${continueModule.moduleSlug}/sertifikat`
+    : `/belajar/${continueModule.moduleSlug}/sesi/${continueSessionIndex}`;
+  const continueLabel = !continueModule
+    ? "Jelajahi Katalog"
+    : continueModuleCompleted
+    ? "Lihat Sertifikat"
+    : "Lanjutkan Belajar";
 
   return (
     <main className="academy-shell dashboard-shell">
@@ -82,17 +102,16 @@ export default async function DashboardPage() {
                 Halo kembali, <UserName fallback="Calon Pelajar" />!
               </h1>
               <p>
-                {hasRealProgress
-                  ? "Lanjutin modul kamu — progress terakhir disimpan otomatis."
-                  : "Kamu belum mulai modul apa pun. Pilih satu dari katalog dan mulai sesi pertamamu."}
+                {!hasRealProgress
+                  ? "Kamu belum mulai modul apa pun. Pilih satu dari katalog dan mulai sesi pertamamu."
+                  : inProgressModules.length === 0
+                  ? "Semua modul aktifmu sudah selesai — keren! Saatnya pilih modul berikutnya."
+                  : "Lanjutin modul kamu — progress terakhir disimpan otomatis."}
               </p>
               <div className="dashboard-welcome__actions">
-                {hasRealProgress && continueModule ? (
-                  <Link
-                    className="button button--primary"
-                    href={`/belajar/${continueModule.moduleSlug}/sesi/${continueModule.completed}`}
-                  >
-                    Lanjutkan Belajar
+                {hasRealProgress ? (
+                  <Link className="button button--primary" href={continueHref}>
+                    {continueLabel}
                     <ArrowRightIcon size={16} />
                   </Link>
                 ) : (
@@ -101,9 +120,15 @@ export default async function DashboardPage() {
                     <ArrowRightIcon size={16} />
                   </Link>
                 )}
-                <Link className="button button--secondary" href="/kelas">
-                  Kelas Aktif
-                </Link>
+                {inProgressModules.length === 0 && hasRealProgress ? (
+                  <Link className="button button--secondary" href="/modul">
+                    Pilih Modul Berikutnya
+                  </Link>
+                ) : (
+                  <Link className="button button--secondary" href="/kelas">
+                    Kelas Aktif
+                  </Link>
+                )}
               </div>
             </div>
             <div className="dashboard-welcome__art" aria-hidden="true">

@@ -94,13 +94,26 @@ export default async function KelasAktifPage() {
                       </div>
                     </div>
                     <div className="kelas-row__actions">
-                      <Link
-                        className="button button--primary button--sm"
-                        href={`/belajar/${active.moduleSlug}/sesi/${active.completed}`}
-                      >
-                        <PlayIcon size={14} />
-                        Lanjutkan
-                      </Link>
+                      {active.completed >= active.total ? (
+                        <Link
+                          className="button button--primary button--sm"
+                          href={`/belajar/${active.moduleSlug}/sertifikat`}
+                        >
+                          <CheckIcon size={14} />
+                          Lihat Sertifikat
+                        </Link>
+                      ) : (
+                        <Link
+                          className="button button--primary button--sm"
+                          href={`/belajar/${active.moduleSlug}/sesi/${Math.min(
+                            active.completed,
+                            Math.max(0, active.total - 1),
+                          )}`}
+                        >
+                          <PlayIcon size={14} />
+                          Lanjutkan
+                        </Link>
+                      )}
                       <Link
                         className="button button--secondary button--sm"
                         href={`/belajar/${active.moduleSlug}`}
