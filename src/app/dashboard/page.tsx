@@ -10,12 +10,11 @@ import { UserName } from "../_components/UserName";
 import { authOptions } from "../../lib/auth";
 import {
   ACTIVE_MODULES,
-  buildSessions,
   findCategory,
   findMentor,
   findModule
 } from "../../lib/content";
-import { getMyActiveModules } from "../../lib/progress-server";
+import { getMyActiveModules, getMyRecentActivity } from "../../lib/progress-server";
 
 export const metadata: Metadata = {
   title: "Dashboard Peserta",
@@ -25,32 +24,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/dashboard" }
 };
 
-const LESSONS_TABLE = [
-  {
-    id: "l1",
-    moduleSlug: "introduction-to-ai",
-    sessionIdx: 3,
-    date: "14 Apr 2026",
-    members: 3,
-    tugasStatus: "done" as const
-  },
-  {
-    id: "l2",
-    moduleSlug: "ai-prompts-101",
-    sessionIdx: 2,
-    date: "17 Apr 2026",
-    members: 7,
-    tugasStatus: "pending" as const
-  },
-  {
-    id: "l3",
-    moduleSlug: "ai-ethics-responsible-ai-use",
-    sessionIdx: 1,
-    date: "22 Apr 2026",
-    members: 1,
-    tugasStatus: "done" as const
-  }
-];
+const KIND_LABEL: Record<string, string> = {
+  progress: "Progress",
+  quiz: "Kuis",
+  assignment: "Tugas",
+  certificate: "Sertifikat",
+};
+
+function formatDate(d: Date) {
+  return new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric" }).format(d);
+}
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -62,7 +45,10 @@ export default async function DashboardPage() {
 
   // Kalau user sudah mulai modul, pakai data DB. Kalau belum, fallback ke contoh
   // statis supaya dashboard tidak kosong saat onboarding pertama kali.
-  const myActive = await getMyActiveModules();
+  const [myActive, recentActivity] = await Promise.all([
+    getMyActiveModules(),
+    getMyRecentActivity(6),
+  ]);
   const activeModules = myActive.length > 0 ? myActive : ACTIVE_MODULES;
   const hasRealProgress = myActive.length > 0;
 
@@ -185,62 +171,35 @@ export default async function DashboardPage() {
 
           <div className="dashboard-section">
             <header className="dashboard-section__head">
-              <h2>Sesi Terjadwal</h2>
-              <Link className="dashboard-section__link" href="/live-session">
-                Live Session <ArrowRightIcon size={14} />
+              <h2>Aktivitas Terbaru</h2>
+              <Link className="dashboard-section__link" href="/progress">
+                Lihat Progress <ArrowRightIcon size={14} />
               </Link>
             </header>
-            <div className="lesson-table" role="table" aria-label="Sesi terjadwal">
-              <div className="lesson-table__head" role="row">
-                <span role="columnheader">Kelas</span>
-                <span role="columnheader">Mentor</span>
-                <span role="columnheader">Peserta</span>
-                <span role="columnheader">Mulai</span>
-                <span role="columnheader">Materi</span>
-                <span role="columnheader">Tugas</span>
+            {recentActivity.length === 0 ? (
+              <div className="catalog-empty">
+                <p>
+                  Belum ada aktivitas tercatat. Selesaikan sesi pertama untuk melihat jejak
+                  belajarmu di sini.
+                </p>
               </div>
-              {LESSONS_TABLE.map((row) => {
-                const mod = findModule(row.moduleSlug);
-                const mentor = mod ? findMentor(mod.mentorSlug) : null;
-                const sessions = mod ? buildSessions(mod, row.sessionIdx + 1) : [];
-                const session = sessions[row.sessionIdx];
-                if (!mod || !session) return null;
-                const code = `${mod.slug.slice(0, 1).toUpperCase()}${row.sessionIdx + 1}`;
-                return (
-                  <div className="lesson-table__row" key={row.id} role="row">
-                    <span role="cell" className="lesson-table__code">
-                      {code}
-                    </span>
-                    <span role="cell">{mentor?.name ?? "[MENTOR]"}</span>
-                    <span role="cell" className="lesson-table__avatars" aria-hidden="true">
-                      <span>SA</span>
-                      <span>RA</span>
-                      <span className="class-card__more">+{row.members}</span>
-                    </span>
-                    <span role="cell">{row.date}</span>
-                    <span role="cell">
-                      <Link
-                        href={`/belajar/${row.moduleSlug}/sesi/${row.sessionIdx}`}
-                        className="lesson-table__link"
-                      >
-                        Buka
-                      </Link>
-                    </span>
-                    <span role="cell">
-                      <span
-                        className={
-                          "lesson-status lesson-status--" +
-                          (row.tugasStatus === "done" ? "done" : "pending")
-                        }
-                      >
-                        <span className="lesson-status__dot" aria-hidden="true" />
-                        {row.tugasStatus === "done" ? "Selesai" : "Pending"}
-                      </span>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+            ) : (
+              <ul className="activity-list">
+                {recentActivity.map((item) => (
+                  <li className={`activity-item activity-item--${item.kind}`} key={item.id}>
+                    <span className="activity-item__tag">{KIND_LABEL[item.kind] ?? item.kind}</span>
+                    <div className="activity-item__body">
+                      <strong>{item.moduleTitle}</strong>
+                      <p>{item.message}</p>
+                      <span className="activity-item__time">{formatDate(item.at)}</span>
+                    </div>
+                    <Link className="activity-item__link" href={item.href}>
+                      Buka <ArrowRightIcon size={14} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </section>
 

@@ -15,6 +15,7 @@ const PROTECTED_PREFIXES = [
   "/rekaman",
   "/live-session",
   "/akun",
+  "/notifikasi",
 ];
 
 const TUTOR_PREFIXES = ["/tutor"];

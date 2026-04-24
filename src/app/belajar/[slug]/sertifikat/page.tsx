@@ -12,6 +12,7 @@ import {
 } from "../../../../lib/progress-server";
 import { prisma } from "../../../../lib/prisma";
 import { getCurrentUser } from "../../../../lib/session";
+import { notify } from "../../../../lib/notify";
 
 export async function generateMetadata({
   params
@@ -75,6 +76,12 @@ export default async function CertificatePage({
         certCode: code,
         score: latestAttempt.score,
       },
+    });
+    await notify({
+      userId: user.id,
+      title: "Sertifikat modul baru siap",
+      body: `Kamu lulus "${mod.title}" dengan skor ${latestAttempt.score}. Kode sertifikat: ${certificate.certCode}.`,
+      href: `/belajar/${slug}/sertifikat`,
     });
   }
 

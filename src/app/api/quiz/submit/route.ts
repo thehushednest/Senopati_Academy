@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../../../lib/prisma";
 import { requireUser } from "../../../../lib/session";
 import { handleApiError } from "../../../../lib/api-utils";
+import { notify } from "../../../../lib/notify";
 
 const answerSchema = z.record(z.string(), z.number().int());
 
@@ -50,6 +51,12 @@ export async function POST(req: NextRequest) {
           finalExamPassed: true,
           completedAt: new Date(),
         },
+      });
+      await notify({
+        userId: user.id,
+        title: "Selamat, kamu lulus ujian akhir",
+        body: `Skor ${body.score}/100 untuk modul ini. Sertifikat kamu siap dibuka.`,
+        href: `/belajar/${body.moduleSlug}/sertifikat`,
       });
     }
 

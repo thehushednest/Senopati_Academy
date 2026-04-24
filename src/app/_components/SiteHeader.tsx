@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HeaderAccount } from "./HeaderAccount";
+import { NotificationBell } from "./NotificationBell";
 import { SearchIcon } from "./Icon";
 
 type SiteHeaderProps = {
@@ -71,6 +72,7 @@ export function SiteHeader({ variant = "home" }: SiteHeaderProps) {
         >
           <SearchIcon size={18} />
         </button>
+        <NotificationBell />
         <HeaderAccount onNavigate={closeMenu} />
         <button
           className="icon-button site-header__toggle"

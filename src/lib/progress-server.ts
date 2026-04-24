@@ -209,6 +209,116 @@ export async function getMyAchievements(): Promise<AchievementItem[]> {
 }
 
 /**
+ * Aktivitas terbaru user untuk dashboard "Aktivitas Terbaru".
+ * Gabungan dari ModuleProgress (sesi selesai), QuizSubmission, AssignmentSubmission,
+ * dan ModuleCertificate — lalu di-sort descending by time.
+ */
+export type LearnerActivity = {
+  id: string;
+  kind: "progress" | "quiz" | "assignment" | "certificate";
+  moduleSlug: string;
+  moduleTitle: string;
+  message: string;
+  href: string;
+  at: Date;
+};
+
+export async function getMyRecentActivity(limit = 6): Promise<LearnerActivity[]> {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const [progresses, quizzes, assignments, certs] = await Promise.all([
+    prisma.moduleProgress.findMany({
+      where: { studentId: user.id, lastSessionIndex: { not: null } },
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+    }),
+    prisma.quizSubmission.findMany({
+      where: { studentId: user.id },
+      orderBy: { submittedAt: "desc" },
+      take: limit,
+    }),
+    prisma.assignmentSubmission.findMany({
+      where: { studentId: user.id },
+      orderBy: { submittedAt: "desc" },
+      take: limit,
+    }),
+    prisma.moduleCertificate.findMany({
+      where: { studentId: user.id },
+      orderBy: { issuedAt: "desc" },
+      take: limit,
+    }),
+  ]);
+
+  const items: LearnerActivity[] = [];
+
+  for (const p of progresses) {
+    const mod = findModule(p.moduleSlug);
+    if (!mod || p.lastSessionIndex === null) continue;
+    items.push({
+      id: `p-${p.id}`,
+      kind: "progress",
+      moduleSlug: p.moduleSlug,
+      moduleTitle: mod.title,
+      message: `Sesi ${String(p.lastSessionIndex + 1).padStart(2, "0")} ditandai selesai`,
+      href: `/belajar/${p.moduleSlug}`,
+      at: p.updatedAt,
+    });
+  }
+
+  for (const q of quizzes) {
+    const mod = findModule(q.moduleSlug);
+    if (!mod) continue;
+    const label =
+      q.quizType === "final_exam"
+        ? `Ujian akhir — skor ${q.score}${q.passed ? " (lulus)" : " (belum lulus)"}`
+        : `Kuis sesi ${q.sessionIndex !== null ? String(q.sessionIndex + 1).padStart(2, "0") : ""} — skor ${q.score}`;
+    items.push({
+      id: `q-${q.id}`,
+      kind: "quiz",
+      moduleSlug: q.moduleSlug,
+      moduleTitle: mod.title,
+      message: label,
+      href: q.quizType === "final_exam"
+        ? `/belajar/${q.moduleSlug}/ujian/hasil`
+        : `/belajar/${q.moduleSlug}`,
+      at: q.submittedAt,
+    });
+  }
+
+  for (const a of assignments) {
+    const mod = findModule(a.moduleSlug);
+    if (!mod) continue;
+    items.push({
+      id: `a-${a.id}`,
+      kind: "assignment",
+      moduleSlug: a.moduleSlug,
+      moduleTitle: mod.title,
+      message: `Tugas sesi ${String(a.sessionIndex + 1).padStart(2, "0")} dikirim (${a.status})`,
+      href: `/belajar/${a.moduleSlug}/sesi/${a.sessionIndex}/tugas`,
+      at: a.submittedAt,
+    });
+  }
+
+  for (const c of certs) {
+    const mod = findModule(c.moduleSlug);
+    if (!mod) continue;
+    items.push({
+      id: `c-${c.id}`,
+      kind: "certificate",
+      moduleSlug: c.moduleSlug,
+      moduleTitle: mod.title,
+      message: `Sertifikat modul diterbitkan · ${c.certCode}`,
+      href: `/belajar/${c.moduleSlug}/sertifikat`,
+      at: c.issuedAt,
+    });
+  }
+
+  items.sort((a, b) => b.at.getTime() - a.at.getTime());
+  return items.slice(0, limit);
+}
+
+/**
  * Aggregate stats untuk halaman /progress.
  */
 export async function getLearnerStats() {
