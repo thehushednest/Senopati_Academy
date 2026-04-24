@@ -16,7 +16,9 @@ import {
 } from "../../../../../lib/content";
 import { resolveModuleProgress } from "../../../../../lib/progress-server";
 import { MarkSessionComplete } from "../../../../_components/MarkSessionComplete";
+import { SlideViewer } from "../../../../_components/SlideViewer";
 import { prisma } from "../../../../../lib/prisma";
+import { getCurrentUser } from "../../../../../lib/session";
 
 export async function generateMetadata({
   params
@@ -80,6 +82,32 @@ export default async function PlayerPage({
     where: { moduleSlug_sessionIndex: { moduleSlug: mod.slug, sessionIndex: sessionIdx } },
   });
 
+  // Load slide progress existing user untuk initial state viewer
+  const viewer = await getCurrentUser();
+  const slideProgress =
+    viewer && material
+      ? await prisma.slideProgress.findUnique({
+          where: {
+            studentId_materialId: { studentId: viewer.id, materialId: material.id },
+          },
+        })
+      : null;
+
+  // Tombol "Tandai Selesai & Lanjut" di-lock sampai user lihat slide terakhir
+  // (kalau ada material + totalPages tercatat). Kalau tidak ada material atau
+  // totalPages belum tercatat, biarkan enable seperti biasa.
+  const viewerIsStudent = viewer?.role === "student";
+  const lockComplete = Boolean(
+    viewerIsStudent &&
+      material &&
+      material.totalPages &&
+      material.totalPages > 1 &&
+      (slideProgress?.maxSlideIndex ?? -1) < material.totalPages - 1,
+  );
+  const lockReason = lockComplete
+    ? `Buka semua ${material?.totalPages} slide untuk menandai sesi selesai`
+    : undefined;
+
   return (
     <main className="academy-shell learning-shell">
       <div className="container">
@@ -97,17 +125,13 @@ export default async function PlayerPage({
           <div className="player">
             {material ? (
               <>
-                <iframe
-                  src={`${material.pdfUrl}#toolbar=1&navpanes=0&scrollbar=1`}
-                  title={`Slide ${mod.title} — Sesi ${String(sessionIdx + 1).padStart(2, "0")}`}
-                  style={{
-                    width: "100%",
-                    height: "clamp(420px, 60vh, 720px)",
-                    border: "none",
-                    borderRadius: 16,
-                    background: "#000",
-                  }}
-                  allow="fullscreen"
+                <SlideViewer
+                  materialId={material.id}
+                  pdfUrl={material.pdfUrl}
+                  filename={material.pdfFilename}
+                  initialLastSlide={slideProgress?.lastSlideIndex ?? 0}
+                  initialMaxSlide={slideProgress?.maxSlideIndex ?? 0}
+                  readOnly={!viewerIsStudent}
                 />
                 <div className="player__chapters">
                   <span>Sesi</span>
@@ -262,6 +286,8 @@ export default async function PlayerPage({
               sessionIndex={sessionIdx}
               totalSessions={totalSessions}
               nextHref={`/belajar/${mod.slug}/sesi/${nextIdx}`}
+              disabled={lockComplete}
+              disabledReason={lockReason}
             />
           ) : (
             <MarkSessionComplete
@@ -270,6 +296,8 @@ export default async function PlayerPage({
               totalSessions={totalSessions}
               nextHref={`/belajar/${mod.slug}/ujian`}
               label="Selesai Sesi · Lanjut ke Ujian"
+              disabled={lockComplete}
+              disabledReason={lockReason}
             />
           )}
         </section>
