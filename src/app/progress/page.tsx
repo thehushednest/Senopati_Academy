@@ -11,7 +11,7 @@ import {
   findModule,
   MODULES
 } from "../../lib/content";
-import { getMyActiveModules, getLearnerStats } from "../../lib/progress-server";
+import { getMyActiveModules, getLearnerStats, getMyAchievements } from "../../lib/progress-server";
 
 export const metadata: Metadata = {
   title: "Progress Belajar",
@@ -25,7 +25,11 @@ const MAX_MINUTES = Math.max(...DASHBOARD_STATS.weeklyMinutes.map((d) => d.minut
 
 export default async function ProgressPage() {
   // Real data dari DB (kalau user sudah belajar), fallback ke sample statis untuk preview.
-  const [myActive, stats] = await Promise.all([getMyActiveModules(), getLearnerStats()]);
+  const [myActive, stats, achievements] = await Promise.all([
+    getMyActiveModules(),
+    getLearnerStats(),
+    getMyAchievements(),
+  ]);
   const hasRealProgress = myActive.length > 0;
 
   const sessionsCompleted = hasRealProgress
@@ -35,8 +39,8 @@ export default async function ProgressPage() {
   const overall = totalSessions === 0 ? 0 : Math.round((sessionsCompleted / totalSessions) * 100);
 
   const activeModules = hasRealProgress ? myActive : ACTIVE_MODULES;
-  const earned = ACHIEVEMENTS.filter((a) => a.status === "earned").length;
-  const inProgress = ACHIEVEMENTS.filter((a) => a.status === "in-progress").length;
+  const earned = achievements.filter((a) => a.status === "earned").length;
+  const inProgress = achievements.filter((a) => a.status === "in-progress").length;
 
   return (
     <main className="academy-shell">
@@ -183,7 +187,7 @@ export default async function ProgressPage() {
             </h2>
           </div>
           <div className="achievement-grid">
-            {ACHIEVEMENTS.map((item) => (
+            {achievements.map((item) => (
               <article
                 key={item.slug}
                 className={`achievement-card achievement-card--${item.status}`}

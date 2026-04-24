@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import { getCurrentUser } from "./session";
-import type { ActiveModuleSample } from "./content";
-import { findModule, getActiveModuleProgress as getStaticSample } from "./content";
+import type { AchievementItem, ActiveModuleSample } from "./content";
+import { ACHIEVEMENTS, findModule, getActiveModuleProgress as getStaticSample, modulesByCategory } from "./content";
 
 export type ModuleProgressView = ActiveModuleSample & { source: "db" | "sample" | "empty" };
 
@@ -116,6 +116,96 @@ export async function getMyActiveModules(limit = 6): Promise<ModuleProgressView[
     });
   }
   return views;
+}
+
+/**
+ * Hitung status achievement dari data real user.
+ * Struktur (slug/title/description) tetap dari ACHIEVEMENTS di content.ts,
+ * tapi `status` dan `progress` di-compute berdasarkan DB.
+ */
+export async function getMyAchievements(): Promise<AchievementItem[]> {
+  const user = await getCurrentUser();
+  if (!user) {
+    // Untuk visitor anonim: return as-is dari content.ts (sample).
+    return ACHIEVEMENTS;
+  }
+
+  const [progresses, certs, replies] = await Promise.all([
+    prisma.moduleProgress.findMany({
+      where: { studentId: user.id },
+      select: { moduleSlug: true, completedSessions: true, totalSessions: true, completedAt: true },
+    }),
+    prisma.moduleCertificate.findMany({
+      where: { studentId: user.id },
+      select: { moduleSlug: true },
+    }),
+    prisma.discussionReply.count({ where: { authorId: user.id } }),
+  ]);
+
+  const firstSessionDone = progresses.some((p) => p.completedSessions > 0);
+
+  const promptsRow = progresses.find((p) => p.moduleSlug === "ai-prompts-101");
+  const promptsCompleted = Boolean(promptsRow?.completedAt);
+  const promptsInProgress = promptsRow && promptsRow.completedSessions > 0 && !promptsCompleted;
+
+  const foundationsSlugs = modulesByCategory("foundations").map((m) => m.slug);
+  const foundationsDone = foundationsSlugs.filter((slug) =>
+    certs.some((c) => c.moduleSlug === slug),
+  );
+
+  const aiBuilderSlug = "building-your-first-ai-tool";
+  const aiBuilderCert = certs.some((c) => c.moduleSlug === aiBuilderSlug);
+  const aiBuilderRow = progresses.find((p) => p.moduleSlug === aiBuilderSlug);
+  const aiBuilderInProgress = Boolean(aiBuilderRow && !aiBuilderRow.completedAt);
+
+  return ACHIEVEMENTS.map((item) => {
+    switch (item.slug) {
+      case "first-session":
+        return { ...item, status: firstSessionDone ? "earned" : "in-progress", progress: undefined };
+      case "prompt-master":
+        if (promptsCompleted) return { ...item, status: "earned", progress: undefined };
+        if (promptsInProgress && promptsRow) {
+          return {
+            ...item,
+            status: "in-progress",
+            progress: `${promptsRow.completedSessions}/${promptsRow.totalSessions} sesi`,
+          };
+        }
+        return { ...item, status: "locked", progress: undefined };
+      case "foundations-graduate":
+        if (foundationsDone.length === foundationsSlugs.length) {
+          return { ...item, status: "earned", progress: undefined };
+        }
+        return {
+          ...item,
+          status: foundationsDone.length > 0 ? "in-progress" : "locked",
+          progress: `${foundationsDone.length}/${foundationsSlugs.length} modul`,
+        };
+      case "community-helper": {
+        const target = 10;
+        if (replies >= target) return { ...item, status: "earned", progress: undefined };
+        if (replies > 0)
+          return { ...item, status: "in-progress", progress: `${replies}/${target} balasan` };
+        return { ...item, status: "locked", progress: undefined };
+      }
+      case "ai-builder":
+        if (aiBuilderCert) return { ...item, status: "earned", progress: undefined };
+        if (aiBuilderInProgress && aiBuilderRow) {
+          return {
+            ...item,
+            status: "in-progress",
+            progress: `${aiBuilderRow.completedSessions}/${aiBuilderRow.totalSessions} sesi`,
+          };
+        }
+        return { ...item, status: "locked", progress: undefined };
+      case "week-streak":
+        // Streak harian butuh tracking activity harian — belum ada data granular itu.
+        // Untuk sekarang biarkan status dari template content.ts supaya tidak misleading.
+        return item;
+      default:
+        return item;
+    }
+  });
 }
 
 /**

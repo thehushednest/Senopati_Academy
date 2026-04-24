@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { DiscussionThread as StaticThread } from "../../lib/content";
 import { ArrowRightIcon, MessageIcon } from "./Icon";
@@ -192,7 +193,7 @@ export function DiscussionBoard({ moduleSlug, initialThreads }: Props) {
             if (entry.kind === "api") {
               const t = entry.thread;
               return (
-                <li className="thread-card" key={t.id}>
+                <li className="thread-card thread-card--clickable" key={t.id}>
                   <span className="thread-card__avatar">{initialsOf(t.author.name)}</span>
                   <div className="thread-card__body">
                     <div className="thread-card__meta">
@@ -206,13 +207,21 @@ export function DiscussionBoard({ moduleSlug, initialThreads }: Props) {
                         </>
                       ) : null}
                     </div>
-                    <h3>{t.title}</h3>
+                    <h3>
+                      <Link href={`/belajar/${moduleSlug}/diskusi/${t.id}`}>{t.title}</Link>
+                    </h3>
                     <p>{t.body}</p>
                     <div className="thread-card__footer">
                       <span>
                         <MessageIcon size={14} /> {t._count.replies} balasan
                       </span>
                       <span>♥ {t._count.likes} like</span>
+                      <Link
+                        className="thread-card__open"
+                        href={`/belajar/${moduleSlug}/diskusi/${t.id}`}
+                      >
+                        Buka thread <ArrowRightIcon size={12} />
+                      </Link>
                     </div>
                   </div>
                 </li>
