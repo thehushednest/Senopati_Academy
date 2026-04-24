@@ -66,8 +66,8 @@ export default async function ProgressPage() {
                 <span>{hasRealProgress ? "Modul selesai" : "Total waktu belajar"}</span>
               </div>
               <div>
-                <strong>{hasRealProgress ? stats.modulesStarted : DASHBOARD_STATS.currentStreak}</strong>
-                <span>{hasRealProgress ? "Modul dimulai" : "Hari streak"}</span>
+                <strong>{hasRealProgress ? stats.currentStreak : DASHBOARD_STATS.currentStreak}</strong>
+                <span>Streak harian</span>
               </div>
               <div>
                 <strong>{hasRealProgress ? stats.certificatesEarned : earned}</strong>

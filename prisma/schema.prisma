@@ -60,6 +60,7 @@ model User {
   moduleReviews          ModuleReview[]
   moduleCertificates     ModuleCertificate[]
   preference             UserPreference?
+  dailyActivities        DailyActivity[]
 
   @@map("users")
 }
@@ -654,6 +655,23 @@ model ModuleCertificate {
 
   @@unique([studentId, moduleSlug])
   @@map("module_certificates")
+}
+
+// Rekam satu row per user per hari kalau user melakukan aksi belajar produktif
+// (sesi selesai, quiz submit, assignment submit, reply thread). Daily granularity
+// cukup untuk hitung streak harian tanpa bloat baris per-event.
+model DailyActivity {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  date      DateTime @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("daily_activity")
 }
 
 model UserPreference {

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../../lib/prisma";
 import { requireUser } from "../../../lib/session";
 import { handleApiError, jsonError } from "../../../lib/api-utils";
+import { recordActivity } from "../../../lib/streak";
 
 const upsertSchema = z.object({
   moduleSlug: z.string().min(1).max(120),
@@ -65,6 +66,8 @@ export async function POST(req: NextRequest) {
         lastSessionIndex: body.sessionIndex,
       },
     });
+
+    await recordActivity(user.id);
 
     return NextResponse.json({ progress });
   } catch (err) {

@@ -40,6 +40,7 @@ const ADMIN_NAV = [
   { label: "Pengguna", href: "/admin/pengguna", Icon: UsersIcon },
   { label: "Konten", href: "/admin/konten", Icon: BookIcon },
   { label: "Moderasi", href: "/admin/moderasi", Icon: MessageIcon },
+  { label: "Audit Log", href: "/admin/audit", Icon: ClockIcon },
   { label: "Pengaturan", href: "/admin/pengaturan", Icon: SparklesIcon }
 ];
 

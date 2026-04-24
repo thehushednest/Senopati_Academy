@@ -2,6 +2,7 @@ import { prisma } from "./prisma";
 import { getCurrentUser } from "./session";
 import type { AchievementItem, ActiveModuleSample } from "./content";
 import { ACHIEVEMENTS, findModule, getActiveModuleProgress as getStaticSample, modulesByCategory } from "./content";
+import { getStreak } from "./streak";
 
 export type ModuleProgressView = ActiveModuleSample & { source: "db" | "sample" | "empty" };
 
@@ -130,7 +131,7 @@ export async function getMyAchievements(): Promise<AchievementItem[]> {
     return ACHIEVEMENTS;
   }
 
-  const [progresses, certs, replies] = await Promise.all([
+  const [progresses, certs, replies, streak] = await Promise.all([
     prisma.moduleProgress.findMany({
       where: { studentId: user.id },
       select: { moduleSlug: true, completedSessions: true, totalSessions: true, completedAt: true },
@@ -140,6 +141,7 @@ export async function getMyAchievements(): Promise<AchievementItem[]> {
       select: { moduleSlug: true },
     }),
     prisma.discussionReply.count({ where: { authorId: user.id } }),
+    getStreak(user.id),
   ]);
 
   const firstSessionDone = progresses.some((p) => p.completedSessions > 0);
@@ -198,10 +200,21 @@ export async function getMyAchievements(): Promise<AchievementItem[]> {
           };
         }
         return { ...item, status: "locked", progress: undefined };
-      case "week-streak":
-        // Streak harian butuh tracking activity harian — belum ada data granular itu.
-        // Untuk sekarang biarkan status dari template content.ts supaya tidak misleading.
-        return item;
+      case "week-streak": {
+        const target = 7;
+        if (streak.currentStreak >= target || streak.longestStreak >= target) {
+          return { ...item, status: "earned", progress: undefined };
+        }
+        const best = Math.max(streak.currentStreak, streak.longestStreak);
+        if (best > 0) {
+          return {
+            ...item,
+            status: "in-progress",
+            progress: `${streak.currentStreak}/${target} hari (terpanjang ${streak.longestStreak})`,
+          };
+        }
+        return { ...item, status: "locked", progress: undefined };
+      }
       default:
         return item;
     }
@@ -330,15 +343,18 @@ export async function getLearnerStats() {
       modulesStarted: 0,
       modulesCompleted: 0,
       certificatesEarned: 0,
+      currentStreak: 0,
+      longestStreak: 0,
     };
   }
 
-  const [allProgress, certsCount] = await Promise.all([
+  const [allProgress, certsCount, streak] = await Promise.all([
     prisma.moduleProgress.findMany({
       where: { studentId: user.id },
       select: { completedSessions: true, totalSessions: true, completedAt: true },
     }),
     prisma.moduleCertificate.count({ where: { studentId: user.id } }),
+    getStreak(user.id),
   ]);
 
   const sessionsCompleted = allProgress.reduce((sum, p) => sum + p.completedSessions, 0);
@@ -351,5 +367,7 @@ export async function getLearnerStats() {
     modulesStarted: allProgress.length,
     modulesCompleted,
     certificatesEarned: certsCount,
+    currentStreak: streak.currentStreak,
+    longestStreak: streak.longestStreak,
   };
 }

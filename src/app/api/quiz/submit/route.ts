@@ -4,6 +4,7 @@ import { prisma } from "../../../../lib/prisma";
 import { requireUser } from "../../../../lib/session";
 import { handleApiError } from "../../../../lib/api-utils";
 import { notify } from "../../../../lib/notify";
+import { recordActivity } from "../../../../lib/streak";
 
 const answerSchema = z.record(z.string(), z.number().int());
 
@@ -59,6 +60,8 @@ export async function POST(req: NextRequest) {
         href: `/belajar/${body.moduleSlug}/sertifikat`,
       });
     }
+
+    await recordActivity(user.id);
 
     return NextResponse.json({ submission });
   } catch (err) {

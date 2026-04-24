@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../../../../lib/prisma";
 import { requireAdmin } from "../../../../../lib/session";
 import { handleApiError, jsonError } from "../../../../../lib/api-utils";
+import { auditLog } from "../../../../../lib/audit";
 
 const updateSchema = z.object({
   role: z.enum(["student", "tutor", "admin"]).optional(),
@@ -56,6 +57,13 @@ export async function PATCH(
       return jsonError("Kamu tidak bisa menurunkan role admin-mu sendiri", 400);
     }
 
+    // Simpan state lama untuk audit meta.
+    const before = await prisma.user.findUnique({
+      where: { id },
+      select: { role: true, mentorSlug: true, name: true },
+    });
+    if (!before) return jsonError("User not found", 404);
+
     const updated = await prisma.user.update({
       where: { id },
       data: {
@@ -75,6 +83,26 @@ export async function PATCH(
         grade: true,
       },
     });
+
+    // Audit: log perubahan yang signifikan (role & mentorSlug terutama).
+    const changes: Record<string, { from: unknown; to: unknown }> = {};
+    if (body.role && body.role !== before.role) {
+      changes.role = { from: before.role, to: body.role };
+    }
+    if (body.mentorSlug !== undefined && body.mentorSlug !== before.mentorSlug) {
+      changes.mentorSlug = { from: before.mentorSlug, to: body.mentorSlug };
+    }
+    if (body.name !== undefined && body.name !== before.name) {
+      changes.name = { from: before.name, to: body.name };
+    }
+    if (Object.keys(changes).length > 0) {
+      await auditLog({
+        actorId: admin.id,
+        action: "user.update",
+        target: id,
+        meta: { targetEmail: updated.email, changes },
+      });
+    }
 
     return NextResponse.json({ user: updated });
   } catch (err) {

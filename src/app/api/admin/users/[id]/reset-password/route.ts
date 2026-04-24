@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../../../../../../lib/prisma";
 import { requireAdmin } from "../../../../../../lib/session";
 import { handleApiError, jsonError } from "../../../../../../lib/api-utils";
+import { auditLog } from "../../../../../../lib/audit";
 
 /**
  * Reset password user dengan password sementara acak. Admin kemudian bagikan
@@ -21,15 +22,25 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
     const { id } = await params;
 
-    const user = await prisma.user.findUnique({ where: { id }, select: { id: true } });
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, name: true },
+    });
     if (!user) return jsonError("User not found", 404);
 
     const tempPassword = generateTempPassword();
     const hash = await bcrypt.hash(tempPassword, 10);
     await prisma.user.update({ where: { id }, data: { passwordHash: hash } });
+
+    await auditLog({
+      actorId: admin.id,
+      action: "user.password_reset",
+      target: id,
+      meta: { targetEmail: user.email, targetName: user.name },
+    });
 
     // Return plaintext password sekali — admin salin dan bagikan langsung.
     // Password tidak pernah disimpan plaintext di DB.

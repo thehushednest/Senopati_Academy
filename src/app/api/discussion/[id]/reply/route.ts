@@ -4,6 +4,7 @@ import { prisma } from "../../../../../lib/prisma";
 import { requireUser } from "../../../../../lib/session";
 import { handleApiError } from "../../../../../lib/api-utils";
 import { notify } from "../../../../../lib/notify";
+import { recordActivity } from "../../../../../lib/streak";
 
 const replySchema = z.object({
   body: z.string().min(2).max(4000),
@@ -44,6 +45,8 @@ export async function POST(
         href: `/belajar/${thread.moduleSlug}/diskusi/${id}`,
       });
     }
+
+    await recordActivity(user.id);
 
     return NextResponse.json({ reply });
   } catch (err) {

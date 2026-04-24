@@ -5,6 +5,7 @@ import { requireUser } from "../../../../lib/session";
 import { handleApiError } from "../../../../lib/api-utils";
 import { notifyRoles } from "../../../../lib/notify";
 import { findModule } from "../../../../lib/content";
+import { recordActivity } from "../../../../lib/streak";
 
 const submitSchema = z.object({
   moduleSlug: z.string().min(1).max(120),
@@ -40,6 +41,8 @@ export async function POST(req: NextRequest) {
       body: `${mod?.title ?? body.moduleSlug} · ${sessionLabel}`,
       href: `/tutor/review/${submission.id}`,
     });
+
+    await recordActivity(user.id);
 
     return NextResponse.json({ submission });
   } catch (err) {
