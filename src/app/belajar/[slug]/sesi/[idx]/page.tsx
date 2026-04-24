@@ -6,8 +6,7 @@ import {
   ClockIcon,
   LevelIcon,
   MessageIcon,
-  PenIcon,
-  PlayIcon
+  PenIcon
 } from "../../../../_components/Icon";
 import { LearningTabs } from "../../../../_components/LearningTabs";
 import {
@@ -17,6 +16,7 @@ import {
 } from "../../../../../lib/content";
 import { resolveModuleProgress } from "../../../../../lib/progress-server";
 import { MarkSessionComplete } from "../../../../_components/MarkSessionComplete";
+import { prisma } from "../../../../../lib/prisma";
 
 export async function generateMetadata({
   params
@@ -75,6 +75,11 @@ export default async function PlayerPage({
   const nextIdx = sessionIdx < sessions.length - 1 ? sessionIdx + 1 : null;
   const totalSessions = mod.syllabus.length;
 
+  // Materi slide untuk sesi ini. Kalau null → tampilkan empty state.
+  const material = await prisma.sessionMaterial.findUnique({
+    where: { moduleSlug_sessionIndex: { moduleSlug: mod.slug, sessionIndex: sessionIdx } },
+  });
+
   return (
     <main className="academy-shell learning-shell">
       <div className="container">
@@ -88,28 +93,63 @@ export default async function PlayerPage({
 
         <LearningTabs moduleSlug={mod.slug} />
 
-        <section className="player-section" aria-label="Video player">
+        <section className="player-section" aria-label="Materi slide">
           <div className="player">
-            <div className="player__frame" role="img" aria-label="Video sesi">
-              <button type="button" className="player__play" aria-label="Putar video">
-                <PlayIcon size={26} />
-              </button>
-              <div className="player__timecode">00:00 / {session.durationMinutes}:00</div>
-              <span className="player__watermark">Senopati Academy</span>
-            </div>
-            <div className="player__chapters">
-              <span>Chapter</span>
-              <div>
-                {sessions.map((s, i) => (
-                  <span
-                    key={i}
-                    className={`player__chapter${i === sessionIdx ? " player__chapter--active" : ""}`}
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                ))}
+            {material ? (
+              <>
+                <iframe
+                  src={`${material.pdfUrl}#toolbar=1&navpanes=0&scrollbar=1`}
+                  title={`Slide ${mod.title} — Sesi ${String(sessionIdx + 1).padStart(2, "0")}`}
+                  style={{
+                    width: "100%",
+                    height: "clamp(420px, 60vh, 720px)",
+                    border: "none",
+                    borderRadius: 16,
+                    background: "#000",
+                  }}
+                  allow="fullscreen"
+                />
+                <div className="player__chapters">
+                  <span>Sesi</span>
+                  <div>
+                    {sessions.map((_, i) => (
+                      <Link
+                        key={i}
+                        href={`/belajar/${mod.slug}/sesi/${i}`}
+                        className={`player__chapter${i === sessionIdx ? " player__chapter--active" : ""}`}
+                        style={{ textDecoration: "none" }}
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 48,
+                  minHeight: 360,
+                  textAlign: "center",
+                  borderRadius: 16,
+                  background: "linear-gradient(180deg, rgba(24, 194, 156, 0.04), rgba(125, 103, 255, 0.04))",
+                  border: "1px dashed rgba(15, 23, 42, 0.12)",
+                }}
+              >
+                <p className="eyebrow" style={{ marginBottom: 8 }}>Materi Slide Belum Siap</p>
+                <strong style={{ fontSize: "1.1rem", marginBottom: 6 }}>
+                  Mentor belum mengunggah slide untuk sesi ini
+                </strong>
+                <p style={{ color: "var(--muted)", maxWidth: 420, margin: "0 auto" }}>
+                  Saat materi tersedia, slide akan ditampilkan di sini — kamu bisa geser halaman,
+                  zoom, dan download PDF langsung dari viewer.
+                </p>
               </div>
-            </div>
+            )}
           </div>
 
           <aside className="player-side">
@@ -125,6 +165,16 @@ export default async function PlayerPage({
               </span>
               {mentor ? <span>{mentor.name}</span> : null}
             </div>
+            {material ? (
+              <p style={{ marginTop: 12, fontSize: "0.82rem", color: "var(--muted)" }}>
+                <strong>{material.title ?? material.pdfFilename}</strong>
+                {material.totalPages ? ` · ${material.totalPages} slide` : ""}
+                {" · "}
+                <a href={material.pdfUrl} target="_blank" rel="noopener noreferrer">
+                  Download PDF
+                </a>
+              </p>
+            ) : null}
             <div className="player-side__actions">
               <Link
                 className="button button--primary"

@@ -158,6 +158,12 @@ export default async function TutorModulPage() {
                         </Link>
                         <Link
                           className="button button--ghost button--sm"
+                          href={`/tutor/modul/${m.slug}/sesi/0/materi`}
+                        >
+                          Upload Materi
+                        </Link>
+                        <Link
+                          className="button button--ghost button--sm"
                           href={`/belajar/${m.slug}/diskusi`}
                         >
                           <MessageIcon size={14} /> Diskusi
@@ -166,7 +172,7 @@ export default async function TutorModulPage() {
                           className="button button--ghost button--sm"
                           href={`/modul/${m.slug}`}
                         >
-                          <BookIcon size={14} /> Preview Modul
+                          <BookIcon size={14} /> Preview
                         </Link>
                       </div>
                     </article>

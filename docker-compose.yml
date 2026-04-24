@@ -42,6 +42,20 @@ services:
       timeout: 3s
       retries: 10
 
+  minio-init:
+    image: minio/mc:latest
+    container_name: senopati-academy-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-senopati} ${MINIO_ROOT_PASSWORD:-senopati-storage-secret} &&
+      mc mb --ignore-existing local/${S3_BUCKET:-senopati-academy} &&
+      mc anonymous set public local/${S3_BUCKET:-senopati-academy}
+      "
+    restart: "no"
+
 volumes:
   academy_postgres_data:
   academy_minio_data:
