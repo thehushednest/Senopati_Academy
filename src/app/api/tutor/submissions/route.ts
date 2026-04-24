@@ -13,13 +13,18 @@ function isStatus(v: string | null): v is Status {
 
 export async function GET(req: NextRequest) {
   try {
-    await requireTutor();
+    const tutor = await requireTutor();
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const moduleSlug = searchParams.get("moduleSlug");
     const limit = Math.min(100, Math.max(1, Number.parseInt(searchParams.get("limit") ?? "50", 10) || 50));
 
-    const where: Prisma.AssignmentSubmissionWhereInput = {};
+    // Guard: tutor tidak melihat submission miliknya sendiri (tidak self-review).
+    // Admin tetap boleh lihat semua.
+    const excludeOwn =
+      tutor.role === "tutor" ? { NOT: { studentId: tutor.id } } : {};
+
+    const where: Prisma.AssignmentSubmissionWhereInput = { ...excludeOwn };
     if (isStatus(status)) where.status = status;
     if (moduleSlug) where.moduleSlug = moduleSlug;
 
@@ -34,6 +39,7 @@ export async function GET(req: NextRequest) {
       }),
       prisma.assignmentSubmission.groupBy({
         by: ["status"],
+        where: excludeOwn,
         _count: { _all: true },
       }),
     ]);

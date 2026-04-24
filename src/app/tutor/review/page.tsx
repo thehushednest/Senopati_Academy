@@ -6,6 +6,7 @@ import { DashboardTopbar } from "../../_components/DashboardTopbar";
 import { ArrowRightIcon, CheckIcon, ClockIcon } from "../../_components/Icon";
 import { prisma } from "../../../lib/prisma";
 import { findModule } from "../../../lib/content";
+import { getCurrentUser } from "../../../lib/session";
 
 export const metadata: Metadata = {
   title: "Review Tugas — Tutor",
@@ -48,15 +49,28 @@ export default async function TutorReviewPage({
   const sp = await searchParams;
   const filter = typeof sp.status === "string" ? sp.status : "all";
 
+  const viewer = await getCurrentUser();
+  const excludeOwn =
+    viewer && viewer.role === "tutor" ? { NOT: { studentId: viewer.id } } : {};
+
+  const baseFilter =
+    filter === "all" || !filter
+      ? excludeOwn
+      : {
+          ...excludeOwn,
+          status: filter as "submitted" | "reviewing" | "approved" | "needs_revision",
+        };
+
   const [submissions, counts] = await Promise.all([
     prisma.assignmentSubmission.findMany({
-      where: filter === "all" || !filter ? {} : { status: filter as "submitted" | "reviewing" | "approved" | "needs_revision" },
+      where: baseFilter,
       orderBy: { submittedAt: "desc" },
       take: 100,
       include: { student: { select: { id: true, name: true, avatarUrl: true } } },
     }),
     prisma.assignmentSubmission.groupBy({
       by: ["status"],
+      where: excludeOwn,
       _count: { _all: true },
     }),
   ]);

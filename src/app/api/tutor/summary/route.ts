@@ -9,14 +9,16 @@ import { handleApiError } from "../../../../lib/api-utils";
  */
 export async function GET() {
   try {
-    await requireTutor();
+    const tutor = await requireTutor();
+    const excludeOwn =
+      tutor.role === "tutor" ? { NOT: { studentId: tutor.id } } : {};
 
     const [studentCount, pendingReviews, reviewingReviews, totalSubmissions, recentEnrollments, discussionThreads] =
       await Promise.all([
         prisma.user.count({ where: { role: "student" } }),
-        prisma.assignmentSubmission.count({ where: { status: "submitted" } }),
-        prisma.assignmentSubmission.count({ where: { status: "reviewing" } }),
-        prisma.assignmentSubmission.count(),
+        prisma.assignmentSubmission.count({ where: { status: "submitted", ...excludeOwn } }),
+        prisma.assignmentSubmission.count({ where: { status: "reviewing", ...excludeOwn } }),
+        prisma.assignmentSubmission.count({ where: excludeOwn }),
         prisma.moduleProgress.findMany({
           orderBy: { startedAt: "desc" },
           take: 5,

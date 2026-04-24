@@ -126,24 +126,46 @@ export function HeaderAccount({ onNavigate }: Props) {
               <span>{user.email}</span>
             </div>
           </div>
+
           <Link role="menuitem" href="/dashboard" onClick={handleItemClick}>
             Dashboard
           </Link>
-          <Link role="menuitem" href="/progress" onClick={handleItemClick}>
-            Progress
-          </Link>
-          <Link role="menuitem" href="/modul" onClick={handleItemClick}>
-            Katalog Modul
-          </Link>
+
+          {user.role === "student" ? (
+            <>
+              <Link role="menuitem" href="/progress" onClick={handleItemClick}>
+                Progress
+              </Link>
+              <Link role="menuitem" href="/modul" onClick={handleItemClick}>
+                Katalog Modul
+              </Link>
+              <Link role="menuitem" href="/onboarding/profil" onClick={handleItemClick}>
+                Profil Belajar
+              </Link>
+              <Link role="menuitem" href="/referral" onClick={handleItemClick}>
+                Ajak Teman
+              </Link>
+            </>
+          ) : null}
+
+          {user.role === "tutor" || user.role === "admin" ? (
+            <>
+              <Link role="menuitem" href="/tutor/review" onClick={handleItemClick}>
+                Review Tugas
+              </Link>
+              <Link role="menuitem" href="/tutor/siswa" onClick={handleItemClick}>
+                Siswa &amp; Diskusi
+              </Link>
+              <Link role="menuitem" href="/modul" onClick={handleItemClick}>
+                Katalog Modul
+              </Link>
+            </>
+          ) : null}
+
           <Link role="menuitem" href="/akun" onClick={handleItemClick}>
             Akun &amp; Password
           </Link>
-          <Link role="menuitem" href="/onboarding/profil" onClick={handleItemClick}>
-            Profil Belajar
-          </Link>
-          <Link role="menuitem" href="/referral" onClick={handleItemClick}>
-            Ajak Teman
-          </Link>
+
           <button
             type="button"
             role="menuitem"

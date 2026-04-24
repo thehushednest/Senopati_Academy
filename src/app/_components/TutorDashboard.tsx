@@ -13,6 +13,7 @@ import {
 import { UserName } from "./UserName";
 import { prisma } from "../../lib/prisma";
 import { findModule } from "../../lib/content";
+import { getCurrentUser } from "../../lib/session";
 
 function relativeTime(d: Date | string) {
   const then = new Date(d).getTime();
@@ -33,13 +34,18 @@ function initialsOf(name: string) {
 }
 
 export async function TutorDashboard() {
+  const viewer = await getCurrentUser();
+  // Kalau tutor login, skip submission miliknya sendiri dari semua hitungan.
+  const excludeOwn =
+    viewer && viewer.role === "tutor" ? { NOT: { studentId: viewer.id } } : {};
+
   const [studentCount, pendingReviews, reviewingReviews, queueItems, recentEnrollments, threadsPending] =
     await Promise.all([
       prisma.user.count({ where: { role: "student" } }),
-      prisma.assignmentSubmission.count({ where: { status: "submitted" } }),
-      prisma.assignmentSubmission.count({ where: { status: "reviewing" } }),
+      prisma.assignmentSubmission.count({ where: { status: "submitted", ...excludeOwn } }),
+      prisma.assignmentSubmission.count({ where: { status: "reviewing", ...excludeOwn } }),
       prisma.assignmentSubmission.findMany({
-        where: { status: "submitted" },
+        where: { status: "submitted", ...excludeOwn },
         orderBy: { submittedAt: "desc" },
         take: 5,
         include: { student: { select: { id: true, name: true, avatarUrl: true } } },

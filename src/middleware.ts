@@ -21,6 +21,17 @@ const PROTECTED_PREFIXES = [
 const TUTOR_PREFIXES = ["/tutor"];
 const ADMIN_PREFIXES = ["/admin"];
 
+// Halaman yang copy & data-nya berasumsi user = pelajar. Tutor/admin yang
+// mencoba akses akan diarahkan ke /dashboard (yang render tutor dashboard).
+// /onboarding sengaja dibiarkan terbuka supaya tutor bisa preview flow murid.
+const STUDENT_ONLY_PREFIXES = [
+  "/progress",
+  "/kelas",
+  "/referral",
+  "/perpustakaan",
+  "/rekaman",
+];
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -47,6 +58,13 @@ export async function middleware(req: NextRequest) {
   }
 
   if (requiresAdmin && token.role !== "admin") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  // Tutor/admin yang nyasar ke halaman khusus student → balik ke dashboard
+  // (yang sudah role-aware render TutorDashboard).
+  const isStudentOnly = STUDENT_ONLY_PREFIXES.some((p) => pathname.startsWith(p));
+  if (isStudentOnly && token.role !== "student") {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 

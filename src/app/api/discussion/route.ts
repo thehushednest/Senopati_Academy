@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "../../../lib/prisma";
 import { requireUser } from "../../../lib/session";
 import { handleApiError, jsonError } from "../../../lib/api-utils";
+import { notifyRoles } from "../../../lib/notify";
+import { findModule } from "../../../lib/content";
 
 const createSchema = z.object({
   moduleSlug: z.string().min(1).max(120),
@@ -51,6 +53,19 @@ export async function POST(req: NextRequest) {
         _count: { select: { replies: true, likes: true } },
       },
     });
+
+    // Notifikasi tutor/admin: thread baru butuh perhatian. Skip kalau author
+    // sendiri tutor/admin supaya tidak mengirim notif ke diri sendiri.
+    if (user.role !== "tutor" && user.role !== "admin") {
+      const mod = findModule(body.moduleSlug);
+      await notifyRoles({
+        roles: ["tutor", "admin"],
+        excludeUserId: user.id,
+        title: `Thread baru dari ${user.name}`,
+        body: `${mod?.title ?? body.moduleSlug} — "${body.title.slice(0, 100)}${body.title.length > 100 ? "…" : ""}"`,
+        href: `/belajar/${body.moduleSlug}/diskusi/${thread.id}`,
+      });
+    }
 
     return NextResponse.json({ thread });
   } catch (err) {

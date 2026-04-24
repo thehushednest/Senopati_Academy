@@ -45,6 +45,24 @@ export async function PATCH(
     const existing = await prisma.assignmentSubmission.findUnique({ where: { id } });
     if (!existing) return jsonError("Submission not found", 404);
 
+    // Guard: tutor tidak boleh review submission miliknya sendiri.
+    if (tutor.role === "tutor" && existing.studentId === tutor.id) {
+      return jsonError("Kamu tidak bisa review submission sendiri", 403);
+    }
+
+    // Ownership: kalau sudah ada reviewer dan ini bukan dia + bukan admin, tolak.
+    // Admin selalu boleh override. Tutor baru bisa claim kalau belum ada reviewer.
+    if (
+      tutor.role === "tutor" &&
+      existing.reviewerId &&
+      existing.reviewerId !== tutor.id
+    ) {
+      return jsonError(
+        "Submission ini sudah di-claim tutor lain. Hubungi admin kalau perlu override.",
+        403,
+      );
+    }
+
     const updated = await prisma.assignmentSubmission.update({
       where: { id },
       data: {
