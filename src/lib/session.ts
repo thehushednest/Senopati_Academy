@@ -12,6 +12,14 @@ export async function requireUser() {
   return user;
 }
 
+export async function requireTutor() {
+  const user = await requireUser();
+  if (user.role !== "tutor" && user.role !== "admin") {
+    throw new ForbiddenError();
+  }
+  return user;
+}
+
 export class UnauthorizedError extends Error {
   constructor() {
     super("Unauthorized");

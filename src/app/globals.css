@@ -5288,6 +5288,27 @@ p {
   text-decoration: underline;
 }
 
+/* ---------- Review actions (tutor) ---------- */
+
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+@media (max-width: 640px) {
+  .review-actions {
+    flex-direction: column;
+  }
+  .review-actions .button {
+    width: 100%;
+  }
+}
+
 /* ---------- Activity list ---------- */
 
 .activity-list {
