@@ -1,0 +1,21 @@
+[Unit]
+Description=Senopati Academy App
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/senopati/Documents/project_2026/Senopati_Academy
+ExecStart=/bin/bash -lc 'exec /tmp/node-v20.19.0-linux-arm64/bin/node "/home/senopati/Documents/project_2026/Senopati_Academy/node_modules/next/dist/bin/next" start -p 3003'
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=20
+Environment=NODE_ENV=production
+Environment=PATH=/tmp/node-v20.19.0-linux-arm64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/bin
+EnvironmentFile=-/home/senopati/Documents/project_2026/Senopati_Academy/.env.production.local
+ExecStop=/bin/kill -TERM $MAINPID
+StandardOutput=append:/home/senopati/Documents/project_2026/Senopati_Academy/academy.log
+StandardError=append:/home/senopati/Documents/project_2026/Senopati_Academy/academy.log
+
+[Install]
+WantedBy=default.target
