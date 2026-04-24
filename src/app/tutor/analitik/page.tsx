@@ -5,90 +5,59 @@ import { DashboardSidebar } from "../../_components/DashboardSidebar";
 import { DashboardTopbar } from "../../_components/DashboardTopbar";
 import { ArrowRightIcon, CheckIcon, ClockIcon, SparklesIcon, UsersIcon } from "../../_components/Icon";
 import { ProgressRing } from "../../_components/ProgressRing";
+import { getMyTaughtSlugs } from "../../../lib/tutor-scope";
+import { getCurrentUser } from "../../../lib/session";
+import {
+  buildInsights,
+  getEnrollmentPerWeek,
+  getPerformancePerModule,
+  getTopStudents,
+} from "../../../lib/tutor-analytics";
 
 export const metadata: Metadata = {
   title: "Analitik — Tutor",
   robots: { index: false, follow: false },
-  alternates: { canonical: "/tutor/analitik" }
+  alternates: { canonical: "/tutor/analitik" },
 };
 
-const WEEKLY_ENROLLMENT = [
-  { week: "W1", count: 8 },
-  { week: "W2", count: 12 },
-  { week: "W3", count: 14 },
-  { week: "W4", count: 9 },
-  { week: "W5", count: 18 },
-  { week: "W6", count: 22 },
-  { week: "W7", count: 15 },
-  { week: "W8", count: 24 }
-];
+export const dynamic = "force-dynamic";
 
-const MODULE_ANALYTICS = [
-  {
-    slug: "introduction-to-ai",
-    title: "Introduction to AI",
-    students: 42,
-    completion: 68,
-    avgQuiz: 82,
-    avgSubmission: 78,
-    satisfaction: 4.7
-  },
-  {
-    slug: "ai-prompts-101",
-    title: "AI Prompts 101",
-    students: 68,
-    completion: 52,
-    avgQuiz: 75,
-    avgSubmission: 80,
-    satisfaction: 4.8
-  },
-  {
-    slug: "ai-for-writing",
-    title: "AI untuk Menulis",
-    students: 24,
-    completion: 41,
-    avgQuiz: 70,
-    avgSubmission: 74,
-    satisfaction: 4.5
-  }
-];
+function initialsOf(name: string) {
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
+}
 
-const TOP_STUDENTS = [
-  { name: "Dewi Anggraini", initials: "D", module: "AI untuk Menulis", score: 94 },
-  { name: "Alya Pertiwi", initials: "A", module: "Introduction to AI", score: 91 },
-  { name: "Nadia Putri", initials: "N", module: "AI Prompts 101", score: 89 },
-  { name: "Fariz Maulana", initials: "F", module: "AI Prompts 101", score: 86 },
-  { name: "Rizky Pramudita", initials: "R", module: "AI Prompts 101", score: 84 }
-];
+export default async function TutorAnalitikPage() {
+  const viewer = await getCurrentUser();
+  const taughtSlugs = await getMyTaughtSlugs(); // null = admin (all)
 
-const INSIGHTS = [
-  {
-    tone: "brand" as const,
-    title: "Sesi 04 jadi titik drop-off",
-    desc: "28% siswa berhenti di Sesi 04 Introduction to AI. Pertimbangkan revisi pacing atau tambah contoh nyata."
-  },
-  {
-    tone: "accent" as const,
-    title: "SLA review kamu 38 jam",
-    desc: "Bagus — di bawah target 48 jam. Konsistensi ini bantu engagement siswa tetap tinggi."
-  },
-  {
-    tone: "indigo" as const,
-    title: "Rating feedback 4.7★",
-    desc: "Siswa apresiasi feedback spesifik kamu. Pola template 'Revisi terarah' jadi favorit."
-  }
-];
+  const [weekly, performance, topStudents] = await Promise.all([
+    getEnrollmentPerWeek(taughtSlugs, 8),
+    getPerformancePerModule(taughtSlugs),
+    getTopStudents(taughtSlugs, 30, 5),
+  ]);
 
-const MAX_ENROLL = Math.max(...WEEKLY_ENROLLMENT.map((w) => w.count));
+  const insights = buildInsights(performance, weekly);
 
-export default function TutorAnalitikPage() {
-  const totalStudents = MODULE_ANALYTICS.reduce((s, m) => s + m.students, 0);
-  const avgCompletion = Math.round(
-    MODULE_ANALYTICS.reduce((s, m) => s + m.completion, 0) / MODULE_ANALYTICS.length
-  );
-  const avgSatisfaction = (
-    MODULE_ANALYTICS.reduce((s, m) => s + m.satisfaction, 0) / MODULE_ANALYTICS.length
-  ).toFixed(1);
+  const totalStudents = performance.reduce((s, m) => s + m.students, 0);
+  const avgCompletion =
+    performance.length > 0
+      ? Math.round(performance.reduce((s, m) => s + m.averageCompletionPercent, 0) / performance.length)
+      : 0;
+  const completedCount = performance.reduce((s, m) => s + m.completedCount, 0);
+  const newThisWeek = weekly[weekly.length - 1]?.count ?? 0;
+  const totalEnrollmentsLast8w = weekly.reduce((s, w) => s + w.count, 0);
+
+  // Average exam score across modules (non-null)
+  const examScores = performance
+    .map((m) => m.averageFinalExamScore)
+    .filter((x): x is number => x !== null);
+  const avgExamScore =
+    examScores.length > 0 ? Math.round(examScores.reduce((a, b) => a + b, 0) / examScores.length) : null;
+
+  const MAX_ENROLL = Math.max(...weekly.map((w) => w.count), 1);
+  const hasMentorMapping = Array.isArray(taughtSlugs) && taughtSlugs.length > 0;
+  const isAdmin = viewer?.role === "admin";
 
   return (
     <main className="academy-shell dashboard-shell">
@@ -101,14 +70,17 @@ export default function TutorAnalitikPage() {
           <header className="dashboard-page-header">
             <div>
               <p className="eyebrow eyebrow--brand">Analitik</p>
-              <h1>Performance modul & siswa kamu</h1>
+              <h1>Performance modul &amp; siswa</h1>
               <p>
-                Update setiap jam. Gunakan data ini untuk identifikasi drop-off, topik sulit, atau
-                siswa yang butuh perhatian ekstra.
+                {isAdmin
+                  ? "Admin view: data lintas seluruh platform, tidak di-scope ke modul tertentu."
+                  : hasMentorMapping
+                  ? `Scope ke ${taughtSlugs.length} modul yang kamu ampu. Update real-time setiap student melakukan aksi.`
+                  : "Akunmu belum di-map ke mentor track. Minta admin untuk map kamu ke track tertentu (mis. Praktis) supaya analitik terfokus."}
               </p>
             </div>
-            <Link className="button button--secondary" href="#export">
-              Export CSV
+            <Link className="button button--secondary" href="/tutor/modul">
+              Buka Modul Saya
               <ArrowRightIcon size={14} />
             </Link>
           </header>
@@ -137,15 +109,15 @@ export default function TutorAnalitikPage() {
                   <span className="tutor-stat__icon tutor-stat__icon--indigo">
                     <SparklesIcon size={18} />
                   </span>
-                  <strong>{avgSatisfaction}★</strong>
-                  <span>Kepuasan siswa</span>
+                  <strong>{completedCount}</strong>
+                  <span>Modul selesai</span>
                 </div>
                 <div className="tutor-stat">
                   <span className="tutor-stat__icon tutor-stat__icon--pink">
                     <ClockIcon size={18} />
                   </span>
-                  <strong>38j</strong>
-                  <span>SLA review</span>
+                  <strong>{avgExamScore !== null ? avgExamScore : "—"}</strong>
+                  <span>Avg skor ujian</span>
                 </div>
               </div>
             </div>
@@ -154,22 +126,34 @@ export default function TutorAnalitikPage() {
           <div className="dashboard-section">
             <header className="dashboard-section__head">
               <h2>Enrollment 8 Minggu Terakhir</h2>
-              <span className="dashboard-section__count">+122 siswa total</span>
+              <span className="dashboard-section__count">{totalEnrollmentsLast8w} enrollment total</span>
             </header>
             <div className="analitik-chart">
               <div className="analitik-chart__bars" role="img" aria-label="Grafik enrollment mingguan">
-                {WEEKLY_ENROLLMENT.map((w) => (
-                  <div key={w.week} className="analitik-chart__col">
-                    <span className="analitik-chart__bar" style={{ height: `${(w.count / MAX_ENROLL) * 100}%` }}>
-                      <span>{w.count}</span>
-                    </span>
-                    <small>{w.week}</small>
-                  </div>
-                ))}
+                {weekly.map((w) => {
+                  const ratio = (w.count / MAX_ENROLL) * 100;
+                  return (
+                    <div key={w.weekStart.toISOString()} className="analitik-chart__col">
+                      <span
+                        className="analitik-chart__bar"
+                        style={{ height: `${Math.max(ratio, w.count > 0 ? 5 : 0)}%` }}
+                        title={`${w.label}: ${w.count} enrollment, minggu mulai ${w.weekStart
+                          .toISOString()
+                          .slice(0, 10)}`}
+                      >
+                        <span>{w.count}</span>
+                      </span>
+                      <small>{w.label}</small>
+                    </div>
+                  );
+                })}
               </div>
               <p className="analitik-chart__note">
-                Trend naik konsisten, kecuali W4 dan W7 (holiday & libur UTS). Sudah sesuai
-                ekspektasi.
+                {totalEnrollmentsLast8w === 0
+                  ? "Belum ada enrollment dalam window 8 minggu."
+                  : `Total ${totalEnrollmentsLast8w} enrollment dalam 8 minggu terakhir${
+                      newThisWeek > 0 ? ` (${newThisWeek} minggu ini)` : ""
+                    }.`}
               </p>
             </div>
           </div>
@@ -181,43 +165,60 @@ export default function TutorAnalitikPage() {
                 Buka Modul <ArrowRightIcon size={12} />
               </Link>
             </header>
-            <div className="analitik-module-table">
-              <div className="analitik-module-table__head" role="row">
-                <span>Modul</span>
-                <span>Siswa</span>
-                <span>Completion</span>
-                <span>Avg Quiz</span>
-                <span>Avg Tugas</span>
-                <span>Kepuasan</span>
+            {performance.length === 0 ? (
+              <div className="catalog-empty">
+                <p>
+                  {hasMentorMapping
+                    ? "Belum ada aktivitas di modul yang kamu ampu."
+                    : isAdmin
+                    ? "Belum ada enrollment di platform."
+                    : "Akunmu belum di-map ke mentor track."}
+                </p>
               </div>
-              {MODULE_ANALYTICS.map((m) => (
-                <div className="analitik-module-table__row" role="row" key={m.slug}>
-                  <span>
-                    <strong>{m.title}</strong>
-                  </span>
-                  <span>{m.students}</span>
-                  <span className="analitik-bar-cell">
-                    <div className="active-progress-bar" aria-hidden="true">
-                      <span style={{ width: `${m.completion}%` }} />
-                    </div>
-                    <small>{m.completion}%</small>
-                  </span>
-                  <span>{m.avgQuiz}</span>
-                  <span>{m.avgSubmission}</span>
-                  <span><strong>{m.satisfaction}★</strong></span>
+            ) : (
+              <div className="analitik-module-table">
+                <div className="analitik-module-table__head" role="row">
+                  <span>Modul</span>
+                  <span>Siswa</span>
+                  <span>Completion</span>
+                  <span>Avg Quiz</span>
+                  <span>Avg Ujian</span>
+                  <span>Avg Tugas</span>
                 </div>
-              ))}
-            </div>
+                {performance.map((m) => (
+                  <div className="analitik-module-table__row" role="row" key={m.slug}>
+                    <span>
+                      <strong>{m.title}</strong>
+                      {m.completedCount > 0 ? (
+                        <small style={{ color: "var(--muted)", display: "block" }}>
+                          {m.completedCount} selesai · {m.approvedSubmissions} tugas approved
+                        </small>
+                      ) : null}
+                    </span>
+                    <span>{m.students}</span>
+                    <span className="analitik-bar-cell">
+                      <div className="active-progress-bar" aria-hidden="true">
+                        <span style={{ width: `${m.averageCompletionPercent}%` }} />
+                      </div>
+                      <small>{m.averageCompletionPercent}%</small>
+                    </span>
+                    <span>{m.averageQuizScore ?? "—"}</span>
+                    <span>{m.averageFinalExamScore ?? "—"}</span>
+                    <span>{m.averageReviewGrade ?? "—"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="tutor-columns">
             <div className="dashboard-section">
               <header className="dashboard-section__head">
                 <h2>Insight Otomatis</h2>
-                <span className="dashboard-section__count">{INSIGHTS.length} temuan</span>
+                <span className="dashboard-section__count">{insights.length} temuan</span>
               </header>
               <ul className="analitik-insights">
-                {INSIGHTS.map((i) => (
+                {insights.map((i) => (
                   <li key={i.title} className={`analitik-insight analitik-insight--${i.tone}`}>
                     <strong>{i.title}</strong>
                     <p>{i.desc}</p>
@@ -233,19 +234,28 @@ export default function TutorAnalitikPage() {
                   Daftar Siswa <ArrowRightIcon size={12} />
                 </Link>
               </header>
-              <ol className="analitik-top">
-                {TOP_STUDENTS.map((t, idx) => (
-                  <li key={t.name}>
-                    <span className="analitik-top__rank">{String(idx + 1).padStart(2, "0")}</span>
-                    <span className="analitik-top__avatar">{t.initials}</span>
-                    <div>
-                      <strong>{t.name}</strong>
-                      <span>{t.module}</span>
-                    </div>
-                    <strong className="analitik-top__score">{t.score}</strong>
-                  </li>
-                ))}
-              </ol>
+              {topStudents.length === 0 ? (
+                <div className="catalog-empty">
+                  <p>Belum ada siswa aktif dalam 30 hari terakhir.</p>
+                </div>
+              ) : (
+                <ol className="analitik-top">
+                  {topStudents.map((t, idx) => (
+                    <li key={t.id}>
+                      <span className="analitik-top__rank">{String(idx + 1).padStart(2, "0")}</span>
+                      <span className="analitik-top__avatar">{initialsOf(t.name)}</span>
+                      <div>
+                        <strong>{t.name}</strong>
+                        <span>
+                          {t.sessionsCompleted} sesi · {t.approvedAssignments} tugas · {t.discussionReplies} balasan
+                          {t.averageQuizScore !== null ? ` · avg kuis ${t.averageQuizScore}` : ""}
+                        </span>
+                      </div>
+                      <strong className="analitik-top__score">{t.compositeScore}</strong>
+                    </li>
+                  ))}
+                </ol>
+              )}
             </div>
           </div>
         </section>
