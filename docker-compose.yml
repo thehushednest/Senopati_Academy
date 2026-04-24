@@ -1,0 +1,47 @@
+# Development stack untuk Senopati Academy.
+# Port di-map ke host berbeda dari default (5432, 9000) supaya tidak
+# bentrok dengan project lain yang mungkin sedang jalan di mesin yang sama.
+
+name: senopati-academy
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: senopati-academy-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-senopati}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-senopati}
+      POSTGRES_DB: ${POSTGRES_DB:-senopati_academy}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5434}:5432"
+    volumes:
+      - academy_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-senopati} -d ${POSTGRES_DB:-senopati_academy}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: senopati-academy-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-senopati}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-senopati-storage-secret}
+    ports:
+      - "${MINIO_API_PORT:-9002}:9000"       # S3 API
+      - "${MINIO_CONSOLE_PORT:-9003}:9001"   # Web console
+    volumes:
+      - academy_minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  academy_postgres_data:
+  academy_minio_data:
