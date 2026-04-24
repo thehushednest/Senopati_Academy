@@ -19,7 +19,7 @@ export default function LoginPage() {
           <h1>Selamat datang kembali.</h1>
           <p className="lede">
             Masuk untuk lanjut belajar, lihat progress, dan dapat modul yang sudah kamu mulai.
-            Belum punya akun? <Link href="/mulai">Daftar sekarang</Link>.
+            Belum punya akun? <Link href="/daftar">Daftar sekarang</Link>.
           </p>
         </section>
 

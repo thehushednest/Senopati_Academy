@@ -2,14 +2,18 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-// Daftar prefix yang membutuhkan autentikasi. Halaman publik (/, /home, /modul, /login, /mulai, /tentang,
-// /blog, /api/auth/*) tetap bebas akses.
+// Daftar prefix yang membutuhkan autentikasi. Halaman publik (/, /home, /modul, /login,
+// /daftar, /mulai, /tentang, /blog, /api/auth/*, /verify/*) tetap bebas akses.
 const PROTECTED_PREFIXES = [
   "/dashboard",
   "/progress",
   "/belajar",
+  "/kelas",
   "/referral",
   "/onboarding",
+  "/perpustakaan",
+  "/rekaman",
+  "/live-session",
 ];
 
 const TUTOR_PREFIXES = ["/tutor"];

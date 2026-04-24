@@ -255,7 +255,7 @@ export default async function HomePage() {
                 <li>Challenge akhir: buat prompt terbaik untuk masalah nyata</li>
               </ul>
               <div>
-                <Link className="button button--accent" href={featured ? `/courses/${featured.slug}` : "/#catalog"}>
+                <Link className="button button--accent" href={featured ? `/modul/${featured.slug}` : "/#catalog"}>
                   Lihat Detail Program
                   <ArrowRightIcon size={16} />
                 </Link>
@@ -343,7 +343,7 @@ export default async function HomePage() {
                     <span>Mentor</span>
                     <strong>{card.mentor}</strong>
                   </div>
-                  <Link href={`/courses/${card.slug}`} aria-label={`Lihat detail ${card.title}`}>
+                  <Link href={`/modul/${card.slug}`} aria-label={`Lihat detail ${card.title}`}>
                     Detail
                     <ArrowRightIcon size={16} />
                   </Link>
@@ -429,7 +429,7 @@ export default async function HomePage() {
                 </div>
                 <h3>{card.title}</h3>
                 <p>{card.description}</p>
-                <Link className="button button--ghost button--sm" href={`/courses/${card.slug}`}>
+                <Link className="button button--ghost button--sm" href={`/modul/${card.slug}`}>
                   Review Program
                   <ArrowRightIcon size={14} />
                 </Link>
@@ -529,7 +529,7 @@ export default async function HomePage() {
                 Jelajahi Katalog
               </Link>
               {featured ? (
-                <Link className="button button--ghost" href={`/courses/${featured.slug}`}>
+                <Link className="button button--ghost" href={`/modul/${featured.slug}`}>
                   Modul Unggulan
                 </Link>
               ) : null}

@@ -11,6 +11,7 @@ import {
   findModule,
   MODULES
 } from "../../lib/content";
+import { getMyActiveModules, getLearnerStats } from "../../lib/progress-server";
 
 export const metadata: Metadata = {
   title: "Progress Belajar",
@@ -22,10 +23,18 @@ export const metadata: Metadata = {
 
 const MAX_MINUTES = Math.max(...DASHBOARD_STATS.weeklyMinutes.map((d) => d.minutes), 60);
 
-export default function ProgressPage() {
-  const overall = Math.round(
-    (DASHBOARD_STATS.sessionsCompleted / DASHBOARD_STATS.totalSessions) * 100
-  );
+export default async function ProgressPage() {
+  // Real data dari DB (kalau user sudah belajar), fallback ke sample statis untuk preview.
+  const [myActive, stats] = await Promise.all([getMyActiveModules(), getLearnerStats()]);
+  const hasRealProgress = myActive.length > 0;
+
+  const sessionsCompleted = hasRealProgress
+    ? stats.sessionsCompleted
+    : DASHBOARD_STATS.sessionsCompleted;
+  const totalSessions = hasRealProgress ? stats.totalSessions : DASHBOARD_STATS.totalSessions;
+  const overall = totalSessions === 0 ? 0 : Math.round((sessionsCompleted / totalSessions) * 100);
+
+  const activeModules = hasRealProgress ? myActive : ACTIVE_MODULES;
   const earned = ACHIEVEMENTS.filter((a) => a.status === "earned").length;
   const inProgress = ACHIEVEMENTS.filter((a) => a.status === "in-progress").length;
 
@@ -39,25 +48,26 @@ export default function ProgressPage() {
               Kamu sudah di <span className="highlight-text">{overall}% perjalanan</span>.
             </h1>
             <p className="lede">
-              Ringkasan ini update otomatis setiap kamu menyelesaikan sesi, kuis, atau tugas.
-              Gunakan sebagai motivasi — bukan target yang bikin stres.
+              {hasRealProgress
+                ? "Ringkasan ini update otomatis setiap kamu menyelesaikan sesi, kuis, atau tugas."
+                : "Belum ada progress tercatat — angka di bawah adalah contoh visual. Mulai modul pertamamu untuk mengisinya."}
             </p>
             <div className="progress-hero__quick">
               <div>
-                <strong>{DASHBOARD_STATS.sessionsCompleted}</strong>
+                <strong>{sessionsCompleted}</strong>
                 <span>Sesi selesai</span>
               </div>
               <div>
-                <strong>{DASHBOARD_STATS.hoursLearned}j</strong>
-                <span>Total waktu belajar</span>
+                <strong>{hasRealProgress ? stats.modulesCompleted : DASHBOARD_STATS.hoursLearned + "j"}</strong>
+                <span>{hasRealProgress ? "Modul selesai" : "Total waktu belajar"}</span>
               </div>
               <div>
-                <strong>{DASHBOARD_STATS.currentStreak}</strong>
-                <span>Hari streak</span>
+                <strong>{hasRealProgress ? stats.modulesStarted : DASHBOARD_STATS.currentStreak}</strong>
+                <span>{hasRealProgress ? "Modul dimulai" : "Hari streak"}</span>
               </div>
               <div>
-                <strong>{earned}</strong>
-                <span>Badge diraih</span>
+                <strong>{hasRealProgress ? stats.certificatesEarned : earned}</strong>
+                <span>{hasRealProgress ? "Sertifikat" : "Badge diraih"}</span>
               </div>
             </div>
           </div>
@@ -106,7 +116,7 @@ export default function ProgressPage() {
             <h2>Rincian progress per modul yang sedang dikerjakan</h2>
           </div>
           <ul className="progress-modules">
-            {ACTIVE_MODULES.map((active) => {
+            {activeModules.map((active) => {
               const mod = findModule(active.moduleSlug);
               const category = mod ? findCategory(mod.categorySlug) : null;
               if (!mod) return null;

@@ -9,6 +9,8 @@ import {
   modulesByCategory,
   MODULES
 } from "../../../lib/content";
+import { getCurrentUser } from "../../../lib/session";
+import { resolveModuleProgress } from "../../../lib/progress-server";
 
 export function generateStaticParams() {
   return MODULES.map((m) => ({ slug: m.slug }));
@@ -45,6 +47,25 @@ export default async function ModuleDetailPage({
   const related = modulesByCategory(mod.categorySlug)
     .filter((m) => m.slug !== mod.slug)
     .slice(0, 3);
+
+  const user = await getCurrentUser();
+  const progress = user ? await resolveModuleProgress(mod.slug) : null;
+  const hasStarted = Boolean(progress && progress.source === "db" && progress.completed > 0);
+
+  // CTA utama: kalau user belum login → /daftar (register).
+  // Kalau sudah login dan belum mulai → /belajar/[slug] (mulai modul).
+  // Kalau sudah login & sudah mulai → /belajar/[slug]/sesi/<completed> (resume).
+  const primaryCtaHref = !user
+    ? "/daftar"
+    : hasStarted
+    ? `/belajar/${mod.slug}/sesi/${progress!.completed}`
+    : `/belajar/${mod.slug}`;
+
+  const primaryCtaLabel = !user
+    ? "Daftar Akun Dulu"
+    : hasStarted
+    ? "Lanjutkan Belajar"
+    : "Mulai Modul Ini";
 
   return (
     <main className="academy-shell academy-shell--detail">
@@ -101,8 +122,8 @@ export default async function ModuleDetailPage({
                 <strong>{mentor.name}</strong>
               </div>
             ) : null}
-            <Link className="button button--primary" href="/mulai" style={{ marginTop: 8 }}>
-              Daftar Modul Ini
+            <Link className="button button--primary" href={primaryCtaHref} style={{ marginTop: 8 }}>
+              {primaryCtaLabel}
               <ArrowRightIcon size={16} />
             </Link>
             <Link className="button button--secondary button--sm" href="/modul">
@@ -179,8 +200,8 @@ export default async function ModuleDetailPage({
                 agar calon pelajar bisa merasakan gaya mentor dan kedalaman materi sebelum
                 memutuskan untuk mendaftar.]
               </p>
-              <Link className="button button--primary button--sm" href="/mulai">
-                Buka Modul Lengkap
+              <Link className="button button--primary button--sm" href={primaryCtaHref}>
+                {user ? "Buka Modul Lengkap" : "Daftar untuk Buka Modul"}
                 <ArrowRightIcon size={14} />
               </Link>
             </div>

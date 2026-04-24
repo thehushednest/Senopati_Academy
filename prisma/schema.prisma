@@ -56,6 +56,7 @@ model User {
   moduleProgresses       ModuleProgress[]
   moduleReviews          ModuleReview[]
   moduleCertificates     ModuleCertificate[]
+  preference             UserPreference?
 
   @@map("users")
 }
@@ -650,4 +651,21 @@ model ModuleCertificate {
 
   @@unique([studentId, moduleSlug])
   @@map("module_certificates")
+}
+
+model UserPreference {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @unique @map("user_id") @db.Uuid
+  nickname      String?
+  learnerRole   String?   @map("learner_role")    // smp | sma | kuliah | guru | umum
+  learningGoal  String?   @map("learning_goal")   // paham-dasar | tugas-sekolah | produktivitas | bikin-tools | ajarin-orang | karir-ai
+  timeBudget    String?   @map("time_budget")     // singkat | sedang | banyak
+  interestsJson Json      @default("[]") @map("interests_json")
+  onboardedAt   DateTime? @map("onboarded_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
 }

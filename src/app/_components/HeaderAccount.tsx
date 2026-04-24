@@ -75,7 +75,7 @@ export function HeaderAccount({ onNavigate }: Props) {
         </Link>
         <Link
           className="button button--primary button--sm site-header__cta"
-          href="/mulai"
+          href="/daftar"
           onClick={onNavigate}
         >
           Daftar Sekarang

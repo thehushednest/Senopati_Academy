@@ -138,7 +138,7 @@ function LoginFormInner() {
             {submitting ? "Memproses..." : "Masuk"}
             <ArrowRightIcon size={16} />
           </button>
-          <Link className="button button--ghost button--sm" href="/mulai">
+          <Link className="button button--ghost button--sm" href="/daftar">
             Belum punya akun? Daftar
           </Link>
         </div>
@@ -195,7 +195,7 @@ function LoginFormInner() {
 
         <p className="login-demo__footer">
           Belum punya akun sendiri?{" "}
-          <Link href="/mulai">
+          <Link href="/daftar">
             Daftar sekarang
             <ArrowRightIcon size={12} />
           </Link>

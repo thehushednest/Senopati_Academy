@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Category } from "../../lib/content";
 import { ArrowRightIcon, CheckIcon } from "./Icon";
 
@@ -76,6 +76,31 @@ export function ProfileForm({ categories }: Props) {
   const [interests, setInterests] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
+  // Prefill dari preference yang sudah pernah disimpan.
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch("/api/onboarding/profile");
+        if (!res.ok) return;
+        const data = await res.json();
+        const pref = data.preference;
+        if (!pref || cancelled) return;
+        if (pref.nickname) setName(pref.nickname);
+        if (pref.learnerRole) setRole(pref.learnerRole as Role);
+        if (pref.learningGoal) setGoal(pref.learningGoal as Goal);
+        if (pref.timeBudget) setTime(pref.timeBudget as TimeBudget);
+        if (Array.isArray(pref.interestsJson)) setInterests(pref.interestsJson as string[]);
+      } catch {
+        // abaikan
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const toggleInterest = (slug: string) => {
     setInterests((prev) =>
       prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
@@ -84,10 +109,28 @@ export function ProfileForm({ categories }: Props) {
 
   const canSubmit = role && goal && time && interests.length > 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit || submitting) return;
     setSubmitting(true);
+
+    // Simpan ke DB — kalau gagal, tetap lanjut ke rekomendasi (UX prioritas).
+    try {
+      await fetch("/api/onboarding/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname: name.trim() || undefined,
+          learnerRole: role,
+          learningGoal: goal,
+          timeBudget: time,
+          interests,
+        }),
+      });
+    } catch {
+      // Abaikan — preferensi URL params tetap dipakai di halaman rekomendasi.
+    }
+
     const params = new URLSearchParams();
     if (name.trim()) params.set("nama", name.trim());
     if (role) params.set("peran", role);

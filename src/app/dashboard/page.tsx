@@ -15,6 +15,7 @@ import {
   findMentor,
   findModule
 } from "../../lib/content";
+import { getMyActiveModules } from "../../lib/progress-server";
 
 export const metadata: Metadata = {
   title: "Dashboard Peserta",
@@ -59,7 +60,12 @@ export default async function DashboardPage() {
     return <TutorDashboard />;
   }
 
-  const continueModule = ACTIVE_MODULES[0];
+  // Kalau user sudah mulai modul, pakai data DB. Kalau belum, fallback ke contoh
+  // statis supaya dashboard tidak kosong saat onboarding pertama kali.
+  const myActive = await getMyActiveModules();
+  const activeModules = myActive.length > 0 ? myActive : ACTIVE_MODULES;
+  const hasRealProgress = myActive.length > 0;
+  const continueModule = activeModules[0];
 
   return (
     <main className="academy-shell dashboard-shell">
@@ -76,11 +82,12 @@ export default async function DashboardPage() {
                 Halo kembali, <UserName fallback="Calon Pelajar" />!
               </h1>
               <p>
-                Lanjutin modul kamu — progress terakhir disimpan otomatis. Tersedia juga update
-                materi baru minggu ini di jalur Foundations.
+                {hasRealProgress
+                  ? "Lanjutin modul kamu — progress terakhir disimpan otomatis."
+                  : "Kamu belum mulai modul apa pun. Pilih satu dari katalog dan mulai sesi pertamamu."}
               </p>
               <div className="dashboard-welcome__actions">
-                {continueModule ? (
+                {hasRealProgress && continueModule ? (
                   <Link
                     className="button button--primary"
                     href={`/belajar/${continueModule.moduleSlug}/sesi/${continueModule.completed}`}
@@ -88,7 +95,12 @@ export default async function DashboardPage() {
                     Lanjutkan Belajar
                     <ArrowRightIcon size={16} />
                   </Link>
-                ) : null}
+                ) : (
+                  <Link className="button button--primary" href="/modul">
+                    Jelajahi Katalog
+                    <ArrowRightIcon size={16} />
+                  </Link>
+                )}
                 <Link className="button button--secondary" href="/kelas">
                   Kelas Aktif
                 </Link>
@@ -109,7 +121,7 @@ export default async function DashboardPage() {
               </Link>
             </header>
             <div className="class-grid">
-              {ACTIVE_MODULES.map((active, idx) => {
+              {activeModules.map((active, idx) => {
                 const mod = findModule(active.moduleSlug);
                 const category = mod ? findCategory(mod.categorySlug) : null;
                 const mentor = mod ? findMentor(mod.mentorSlug) : null;
