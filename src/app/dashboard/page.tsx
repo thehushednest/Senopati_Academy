@@ -39,6 +39,12 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const role = session?.user?.role;
 
+  if (role === "admin") {
+    // Admin lihat varian TutorDashboard (queue + enrollments, cross-modul karena
+    // admin taughtSlugs=null) sebagai landing. Sidebar otomatis pakai ADMIN_NAV.
+    return <TutorDashboard />;
+  }
+
   if (role === "tutor") {
     return <TutorDashboard />;
   }
