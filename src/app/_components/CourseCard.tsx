@@ -11,7 +11,6 @@ export function CourseCard({ course }: { course: CourseRecord }) {
     <article className="course-card">
       <div className="course-card__media" aria-hidden="true">
         <span className="course-card__badge">{accentLabel}</span>
-        <span className="course-card__price">{course.priceLabel}</span>
         <div className="course-card__mockup">
           <div className="course-card__mockup-header">
             <span />
@@ -53,7 +52,7 @@ export function CourseCard({ course }: { course: CourseRecord }) {
           <span>Mentor</span>
           <strong>{course.eyebrow}</strong>
         </div>
-        <Link href={`/courses/${course.slug}`} aria-label={`Lihat detail ${course.title}`}>
+        <Link href={`/modul/${course.slug}`} aria-label={`Lihat detail ${course.title}`}>
           Detail
           <ArrowRightIcon size={16} />
         </Link>

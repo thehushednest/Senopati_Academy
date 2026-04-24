@@ -14,6 +14,7 @@ const PROTECTED_PREFIXES = [
   "/perpustakaan",
   "/rekaman",
   "/live-session",
+  "/akun",
 ];
 
 const TUTOR_PREFIXES = ["/tutor"];

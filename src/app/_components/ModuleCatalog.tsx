@@ -89,7 +89,6 @@ export function ModuleCatalog({ modules, categories }: Props) {
             <article className="course-card" key={mod.slug}>
               <div className="course-card__media" aria-hidden="true">
                 <span className="course-card__badge">{chipLabel(mod.categorySlug)}</span>
-                <span className="course-card__price">{mod.price}</span>
                 <div className="course-card__mockup">
                   <div className="course-card__mockup-header">
                     <span />

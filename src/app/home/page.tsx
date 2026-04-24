@@ -246,8 +246,7 @@ export default async function HomePage() {
               </p>
               <div className="featured-course__meta">
                 <span>Pemula</span>
-                <span>[DURASI]</span>
-                <span>[HARGA]</span>
+                <span>7 Topik</span>
               </div>
               <ul className="featured-course__list">
                 <li>Teknik dasar prompt: zero-shot, one-shot, few-shot</li>
@@ -301,7 +300,6 @@ export default async function HomePage() {
               <article className="course-card" key={card.slug}>
                 <div className="course-card__media" aria-hidden="true">
                   <span className="course-card__badge">{card.category}</span>
-                  <span className="course-card__price">{card.price}</span>
                   <div className="course-card__mockup">
                     <div className="course-card__mockup-header">
                       <span />
@@ -425,7 +423,7 @@ export default async function HomePage() {
               <article className="spotlight-card" key={card.slug}>
                 <div className="spotlight-card__top">
                   <span>{card.category}</span>
-                  <strong>{card.price}</strong>
+                  <strong>{card.level}</strong>
                 </div>
                 <h3>{card.title}</h3>
                 <p>{card.description}</p>

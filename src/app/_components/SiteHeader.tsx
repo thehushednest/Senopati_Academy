@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HeaderAccount } from "./HeaderAccount";
-import { CartIcon, SearchIcon } from "./Icon";
+import { SearchIcon } from "./Icon";
 
 type SiteHeaderProps = {
   variant?: "home" | "detail";
@@ -70,13 +70,6 @@ export function SiteHeader({ variant = "home" }: SiteHeaderProps) {
           aria-label="Cari program"
         >
           <SearchIcon size={18} />
-        </button>
-        <button
-          className="icon-button site-header__cart"
-          type="button"
-          aria-label="Keranjang"
-        >
-          <CartIcon size={18} />
         </button>
         <HeaderAccount onNavigate={closeMenu} />
         <button

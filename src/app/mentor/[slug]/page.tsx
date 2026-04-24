@@ -112,7 +112,6 @@ export default async function MentorPage({
                 <article className="course-card" key={mod.slug}>
                   <div className="course-card__media" aria-hidden="true">
                     <span className="course-card__badge">{category?.name}</span>
-                    <span className="course-card__price">{mod.price}</span>
                     <div className="course-card__mockup">
                       <div className="course-card__mockup-header">
                         <span />

@@ -135,11 +135,14 @@ export function HeaderAccount({ onNavigate }: Props) {
           <Link role="menuitem" href="/modul" onClick={handleItemClick}>
             Katalog Modul
           </Link>
+          <Link role="menuitem" href="/akun" onClick={handleItemClick}>
+            Akun &amp; Password
+          </Link>
           <Link role="menuitem" href="/onboarding/profil" onClick={handleItemClick}>
-            Ubah Profil
+            Profil Belajar
           </Link>
           <Link role="menuitem" href="/referral" onClick={handleItemClick}>
-            Program Rujukan
+            Ajak Teman
           </Link>
           <button
             type="button"

@@ -10,9 +10,10 @@ import {
 } from "../_components/Icon";
 
 export const metadata: Metadata = {
-  title: "Program Rujukan — Ajak Teman, Dapat Reward",
+  title: "Ajak Teman Belajar — Senopati Academy",
   description:
-    "Bagikan link rujukan kamu, ajak teman daftar Senopati Academy, dan dapatkan reward untuk setiap teman yang join.",
+    "Bagikan link kamu, ajak teman bergabung belajar AI di Senopati Academy. Makin banyak teman seangkatan, makin seru belajarnya.",
+  robots: { index: false, follow: false },
   alternates: { canonical: "/referral" }
 };
 
@@ -26,66 +27,47 @@ const STEPS = [
   },
   {
     Icon: UsersIcon,
-    title: "Teman Daftar",
-    desc: "Teman kamu klik link, pilih paket, dan selesaikan pembayaran di Senopati Academy."
+    title: "Teman Bergabung",
+    desc: "Teman kamu klik link dan mendaftar akun Senopati Academy — gratis."
   },
   {
     Icon: SparklesIcon,
-    title: "Dapat Reward",
-    desc: "Begitu teman aktif, reward otomatis masuk ke akun kamu. Bisa dicairkan atau dipakai untuk paket tambahan."
+    title: "Belajar Bersama",
+    desc: "Kalian bisa diskusi di thread modul, saling dukung, dan tumbuh bareng jadi melek AI."
   }
 ];
 
-const TIERS = [
+const PERKS = [
   {
-    level: "Level 1",
-    threshold: "1 — 4 teman",
-    reward: "[REWARD_LEVEL_1]",
-    perks: ["Komisi per teman aktif", "Akses modul bonus"]
+    title: "Badge Komunitas",
+    desc: "Setiap teman yang bergabung lewat kamu menambah jejak komunitasmu. Badge khusus muncul di profil setelah ≥5 teman aktif."
   },
   {
-    level: "Level 2",
-    threshold: "5 — 14 teman",
-    reward: "[REWARD_LEVEL_2]",
-    perks: [
-      "Komisi lebih besar per teman",
-      "Badge Mentor Ambassador",
-      "Akses Q&A bulanan eksklusif"
-    ],
-    featured: true
+    title: "Akses Awal Fitur Baru",
+    desc: "Anggota yang aktif mengajak teman mendapat prioritas uji coba fitur baru — misal live session tematik atau modul beta."
   },
   {
-    level: "Level 3",
-    threshold: "15+ teman",
-    reward: "[REWARD_LEVEL_3]",
-    perks: [
-      "Komisi premium per teman",
-      "Sesi 1-on-1 dengan mentor",
-      "Kesempatan jadi narasumber komunitas"
-    ]
+    title: "Undangan Diskusi Tertutup",
+    desc: "Ambassador aktif diundang ke grup komunitas inti bersama mentor untuk diskusi kurikulum & arah platform."
   }
 ];
 
 const FAQ = [
   {
     q: "Siapa saja yang bisa ikut program rujukan?",
-    a: "Semua pelajar Senopati Academy yang sudah aktif (sudah daftar paket apa pun). Link rujukan otomatis aktif di dashboard setelah pembayaran berhasil."
+    a: "Semua pelajar Senopati Academy yang sudah punya akun. Link rujukan otomatis muncul di halaman ini begitu kamu login."
   },
   {
-    q: "Kapan reward saya masuk?",
-    a: "Reward masuk otomatis 24 jam setelah teman yang kamu ajak menyelesaikan pembayaran dan status akunnya aktif."
+    q: "Apa yang teman saya dapat kalau daftar lewat link saya?",
+    a: "Mereka langsung tercatat sebagai bagian dari jaringanmu — dan kalian bisa saling muncul di thread diskusi modul, bikin belajar tidak sendirian."
   },
   {
-    q: "Bagaimana cara mencairkan reward?",
-    a: "Setelah mencapai minimum [MIN_WITHDRAW], kamu bisa request pencairan via transfer bank atau e-wallet dari halaman dashboard rujukan."
+    q: "Ada reward material-nya?",
+    a: "Untuk sekarang belum. Fokus kami saat ini adalah membangun komunitas belajar yang sehat, bukan program afiliasi. Pengakuan di platform tetap ada (badge, akses awal, undangan diskusi)."
   },
   {
-    q: "Apakah teman yang saya ajak dapat benefit juga?",
-    a: "Ya. Teman yang daftar lewat link kamu otomatis dapat diskon spesial [DISKON_REFERRAL] untuk pembelian pertama."
-  },
-  {
-    q: "Bolehkah saya promosi di media sosial?",
-    a: "Boleh. Kami bahkan menyediakan template konten untuk Instagram, TikTok, dan WhatsApp. Hanya saja, hindari praktik spam atau klaim palsu soal Senopati Academy."
+    q: "Bolehkah saya bagikan link di media sosial?",
+    a: "Boleh. Justru kami dorong — kalau kamu punya pengikut yang penasaran AI, undang mereka ke sini."
   }
 ];
 
@@ -93,23 +75,23 @@ export default function ReferralPage() {
   return (
     <main className="academy-shell">
       <div className="container">
-        <section className="referral-hero" aria-label="Program rujukan">
-          <p className="eyebrow eyebrow--brand">Program Rujukan</p>
+        <section className="referral-hero" aria-label="Ajak teman">
+          <p className="eyebrow eyebrow--brand">Ajak Teman</p>
           <h1 className="referral-hero__title">
-            Ajak Teman Belajar AI — <span className="highlight-text">Kalian Sama-sama Dapat Reward</span>
+            Ajak teman <span className="highlight-text">belajar AI bareng</span>
           </h1>
           <p className="lede referral-hero__lede">
-            Bagikan link rujukan kamu, ajak teman daftar Senopati Academy, dan dapatkan reward untuk
-            setiap teman yang join. Teman kamu juga dapat diskon spesial untuk pembelian pertama.
+            Bagikan link kamu, ajak teman bergabung. Belajar AI lebih enak kalau ada yang bisa
+            diajak ngobrol — saling tanya di thread modul, saling kirim insight baru.
           </p>
         </section>
 
         <section className="referral-link-card" aria-label="Link rujukan">
           <div className="referral-link-card__copy">
-            <p className="eyebrow eyebrow--brand">Link Rujukan Kamu</p>
+            <p className="eyebrow eyebrow--brand">Link Kamu</p>
             <h2>Salin dan bagikan ke temanmu</h2>
             <p className="lede" style={{ marginTop: 8 }}>
-              Setiap orang yang daftar lewat link ini tercatat sebagai rujukanmu.
+              Setiap orang yang daftar lewat link ini tercatat sebagai bagian jaringan belajarmu.
             </p>
           </div>
           <div className="referral-link-card__input">
@@ -126,7 +108,7 @@ export default function ReferralPage() {
         <section aria-label="Cara kerja">
           <div className="section-heading section-heading--center">
             <p className="eyebrow">Cara Kerja</p>
-            <h2>3 langkah mudah untuk mulai dapatkan reward</h2>
+            <h2>3 langkah sederhana</h2>
           </div>
           <div className="referral-steps">
             {STEPS.map(({ Icon, title, desc }, idx) => (
@@ -142,31 +124,19 @@ export default function ReferralPage() {
           </div>
         </section>
 
-        <section aria-label="Tingkat reward">
+        <section aria-label="Benefit komunitas">
           <div className="section-heading section-heading--center">
-            <p className="eyebrow eyebrow--brand">Tingkat Reward</p>
-            <h2>Makin banyak ajak, makin besar reward yang kamu dapat</h2>
+            <p className="eyebrow eyebrow--brand">Yang Didapat</p>
+            <h2>Benefit buat kamu yang aktif mengajak</h2>
           </div>
-          <div className="referral-tiers">
-            {TIERS.map((tier) => (
-              <article
-                className={`referral-tier${tier.featured ? " referral-tier--featured" : ""}`}
-                key={tier.level}
-              >
-                {tier.featured ? <span className="referral-tier__ribbon">Paling Diminati</span> : null}
-                <p className="eyebrow">{tier.level}</p>
-                <h3>{tier.threshold}</h3>
-                <div className="referral-tier__reward">
-                  <strong>{tier.reward}</strong>
-                  <span>reward per teman aktif</span>
-                </div>
-                <ul>
-                  {tier.perks.map((perk) => (
-                    <li key={perk}>
-                      <CheckIcon size={14} /> {perk}
-                    </li>
-                  ))}
-                </ul>
+          <div className="lp-benefit-grid">
+            {PERKS.map((perk) => (
+              <article className="lp-benefit-card" key={perk.title}>
+                <span className="lp-benefit-card__icon">
+                  <CheckIcon size={22} />
+                </span>
+                <h3>{perk.title}</h3>
+                <p>{perk.desc}</p>
               </article>
             ))}
           </div>
@@ -195,20 +165,20 @@ export default function ReferralPage() {
         <section aria-label="Call to action">
           <div className="cta-banner">
             <div>
-              <p className="eyebrow">Mulai Sekarang</p>
-              <h2>Belum daftar Senopati Academy? Mulai dulu, lalu ajak teman.</h2>
+              <p className="eyebrow">Ajak Sekarang</p>
+              <h2>Siap bikin belajar AI lebih seru dengan teman-temanmu?</h2>
               <p className="lede" style={{ marginTop: 12 }}>
-                Program rujukan aktif otomatis setelah kamu jadi pelajar aktif. Mulai dari paket
-                Starter atau Premium — keduanya bisa jadi pintu masuk jadi ambassador.
+                Salin link di atas, kirim ke circle kamu. Mereka daftar gratis, kalian jadi
+                seangkatan di platform.
               </p>
             </div>
             <div className="cta-banner__actions">
-              <Link className="button button--accent" href="/mulai">
-                Daftar Sekarang
+              <Link className="button button--accent" href="/modul">
+                Lihat Katalog
                 <ArrowRightIcon size={16} />
               </Link>
-              <Link className="button button--ghost" href="/home#catalog">
-                Lihat Modul
+              <Link className="button button--ghost" href="/dashboard">
+                Kembali ke Dashboard
               </Link>
             </div>
           </div>

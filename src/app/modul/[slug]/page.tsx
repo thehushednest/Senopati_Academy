@@ -96,7 +96,6 @@ export default async function ModuleDetailPage({
                 {mod.duration}
               </span>
               <span>{mod.topics} Topik</span>
-              <span>{mod.price}</span>
             </div>
           </div>
           <aside className="course-sidecard">
@@ -107,10 +106,6 @@ export default async function ModuleDetailPage({
             <div className="course-sidecard__row">
               <span>Durasi</span>
               <strong>{mod.duration}</strong>
-            </div>
-            <div className="course-sidecard__row">
-              <span>Harga</span>
-              <strong>{mod.price}</strong>
             </div>
             <div className="course-sidecard__row">
               <span>Kategori</span>
@@ -219,7 +214,7 @@ export default async function ModuleDetailPage({
                 <article className="spotlight-card" key={r.slug}>
                   <div className="spotlight-card__top">
                     <span>{category?.name}</span>
-                    <strong>{r.price}</strong>
+                    <strong>{r.level}</strong>
                   </div>
                   <h3>{r.title}</h3>
                   <p>{r.excerpt}</p>

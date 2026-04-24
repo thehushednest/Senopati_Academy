@@ -137,12 +137,10 @@ main.academy-shell .container > section:first-of-type {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 18px;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: saturate(1.1) blur(18px);
-  -webkit-backdrop-filter: saturate(1.1) blur(18px);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
 }
 
 .brand {
@@ -5288,6 +5286,47 @@ p {
 
 .thread-card__open:hover {
   text-decoration: underline;
+}
+
+/* ---------- Account nav ---------- */
+
+.account-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 4px;
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  width: fit-content;
+}
+
+.account-nav__item {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.account-nav__item:hover {
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--ink);
+}
+
+.account-nav__item--active {
+  background: #ffffff;
+  color: var(--brand-strong);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.section-spacer {
+  margin-top: 32px;
 }
 
 /* ---------- Thread Detail ---------- */

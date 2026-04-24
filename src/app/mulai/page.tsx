@@ -4,7 +4,6 @@ import {
   ArrowRightIcon,
   BookIcon,
   CheckIcon,
-  ClockIcon,
   MessageIcon,
   PresentIcon,
   SparklesIcon,
@@ -12,10 +11,10 @@ import {
 } from "../_components/Icon";
 
 export const metadata: Metadata = {
-  title: "Mulai Belajar AI — Promo Launch",
+  title: "Mulai Belajar AI — Senopati Academy",
   description:
-    "Daftar Senopati Academy hari ini. 25 modul AI terstruktur, mentor berpengalaman, sertifikat resmi. Cocok untuk pelajar SMP, SMA, dan siapa saja yang penasaran AI.",
-  robots: { index: false, follow: true },
+    "25 modul AI terstruktur, mentor berpengalaman, sertifikat resmi. Cocok untuk pelajar SMP, SMA, dan siapa saja yang penasaran AI.",
+  robots: { index: true, follow: true },
   alternates: { canonical: "/mulai" }
 };
 
@@ -53,12 +52,12 @@ const BENEFITS = [
 ];
 
 const INCLUDED = [
-  "Akses seumur hidup ke 25 modul AI",
+  "Akses ke 25 modul AI",
   "Challenge interaktif di setiap modul",
   "Template prompt siap pakai",
   "Grup diskusi & Q&A dengan mentor",
   "Sertifikat resmi Senopati Academy",
-  "Update modul baru gratis"
+  "Update modul baru"
 ];
 
 const TESTIMONIALS = [
@@ -89,19 +88,19 @@ const FAQ = [
   },
   {
     q: "Berapa lama saya bisa akses modul?",
-    a: "Akses seumur hidup. Sekali daftar, kamu bisa ulang-ulang setiap modul kapan saja, termasuk update modul baru."
+    a: "Setelah daftar, kamu bisa akses semua modul kapan saja. Belajar pakai ritmemu sendiri — tidak ada deadline yang mengunci."
   },
   {
     q: "Apakah ada sertifikatnya?",
-    a: "Ada. Sertifikat resmi Senopati Academy keluar otomatis setelah kamu menyelesaikan satu jalur (track) penuh. Bisa ditambahkan ke CV atau portofolio."
+    a: "Ada. Sertifikat resmi Senopati Academy keluar otomatis setelah kamu menyelesaikan seluruh sesi dan lulus ujian akhir sebuah modul. Bisa ditambahkan ke CV atau portofolio."
   },
   {
-    q: "Bagaimana kalau saya nggak cocok?",
-    a: "Kami kasih garansi 7 hari uang kembali — tanpa pertanyaan. Cukup kirim email ke support dan dana dikembalikan 100%."
+    q: "Saya pemula total soal AI, apakah tetap bisa ikut?",
+    a: "Justru cocok. Modul Foundations dirancang dari nol — tidak ada prasyarat teknis. Kamu bisa mulai dari Introduction to AI dan ikuti alurnya."
   },
   {
-    q: "Cara pembayarannya gimana?",
-    a: "Transfer bank, e-wallet (OVO/GoPay/Dana), kartu kredit, atau cicilan. Semua metode umum di Indonesia kami dukung."
+    q: "Bagaimana cara mulai?",
+    a: "Daftar pakai email, kelar isi profil belajar singkat (3 menit), lalu kamu langsung dapat 3 rekomendasi modul pertama yang paling cocok buatmu."
   }
 ];
 
@@ -110,7 +109,7 @@ export default function MulaiPage() {
     <main className="academy-shell lp-shell">
       <div className="container">
         <section className="lp-hero" aria-label="Hero">
-          <p className="eyebrow eyebrow--brand">Promo Launch · Terbatas</p>
+          <p className="eyebrow eyebrow--brand">Senopati Academy</p>
           <h1 className="lp-hero__title">
             Mulai Belajar <span className="highlight-text">AI dari Nol</span> — Siap Hadapi Era
             Digital
@@ -120,12 +119,12 @@ export default function MulaiPage() {
             pelajar Indonesia yang mau paham AI — bukan cuma ikut-ikutan tren.
           </p>
           <div className="lp-hero__cta">
-            <Link className="button button--primary" href="#daftar">
-              Daftar Sekarang — [HARGA_PROMO]
+            <Link className="button button--primary" href="/daftar">
+              Daftar Akun
               <ArrowRightIcon size={16} />
             </Link>
-            <Link className="button button--secondary" href="#modul">
-              Lihat Modul
+            <Link className="button button--secondary" href="/modul">
+              Lihat Katalog Modul
             </Link>
           </div>
           <ul className="lp-hero__trust" aria-label="Jaminan">
@@ -133,13 +132,10 @@ export default function MulaiPage() {
               <CheckIcon size={16} /> 25 modul lengkap
             </li>
             <li>
-              <CheckIcon size={16} /> [JUMLAH_PELAJAR]+ pelajar aktif
+              <CheckIcon size={16} /> Mentor dari praktisi
             </li>
             <li>
               <CheckIcon size={16} /> Sertifikat resmi
-            </li>
-            <li>
-              <CheckIcon size={16} /> Garansi 7 hari
             </li>
           </ul>
         </section>
@@ -147,7 +143,7 @@ export default function MulaiPage() {
         <section aria-label="Keunggulan">
           <div className="section-heading section-heading--center">
             <p className="eyebrow eyebrow--brand">Kenapa Senopati Academy?</p>
-            <h2>Alasan ribuan pelajar memilih kami untuk mulai belajar AI</h2>
+            <h2>Alasan pelajar memilih Senopati Academy untuk mulai belajar AI</h2>
           </div>
           <div className="lp-benefit-grid">
             {BENEFITS.map(({ Icon, title, desc }) => (
@@ -166,10 +162,9 @@ export default function MulaiPage() {
           <div className="lp-included-card">
             <div className="lp-included-card__copy">
               <p className="eyebrow">Yang Kamu Dapat</p>
-              <h2>Semua yang kamu butuhkan untuk kuasai AI dalam satu paket</h2>
+              <h2>Semua yang kamu butuhkan untuk kuasai AI dalam satu platform</h2>
               <p className="lede" style={{ marginTop: 8 }}>
-                Nggak ada upsell tersembunyi. Sekali daftar, semua modul, template, dan komunitas
-                terbuka untukmu.
+                Kurikulum, mentor, komunitas, dan sertifikat — semua terintegrasi di satu tempat.
               </p>
             </div>
             <ul className="lp-included-card__list">
@@ -208,58 +203,6 @@ export default function MulaiPage() {
           </div>
         </section>
 
-        <section id="daftar" aria-label="Daftar">
-          <div className="section-heading section-heading--center">
-            <p className="eyebrow eyebrow--brand">Daftar Sekarang</p>
-            <h2>Investasi satu kali, akses seumur hidup</h2>
-          </div>
-          <div className="lp-pricing">
-            <article className="lp-price-card">
-              <p className="eyebrow">Basic</p>
-              <h3>Starter</h3>
-              <div className="lp-price-card__price">
-                <strong>[HARGA_BASIC]</strong>
-                <span>akses 6 bulan</span>
-              </div>
-              <ul>
-                <li><CheckIcon size={14} /> Akses 10 modul pilihan</li>
-                <li><CheckIcon size={14} /> Challenge di setiap modul</li>
-                <li><CheckIcon size={14} /> Template prompt siap pakai</li>
-                <li><CheckIcon size={14} /> Grup diskusi</li>
-              </ul>
-              <Link className="button button--secondary" href="#checkout-basic">
-                Pilih Starter
-              </Link>
-            </article>
-
-            <article className="lp-price-card lp-price-card--featured">
-              <span className="lp-price-card__ribbon">Paling Populer</span>
-              <p className="eyebrow">Paket Lengkap</p>
-              <h3>Premium</h3>
-              <div className="lp-price-card__price">
-                <strong>[HARGA_PREMIUM]</strong>
-                <span>akses seumur hidup</span>
-              </div>
-              <ul>
-                <li><CheckIcon size={14} /> Akses <strong>25 modul</strong> lengkap</li>
-                <li><CheckIcon size={14} /> Challenge + review mentor</li>
-                <li><CheckIcon size={14} /> Template & toolkit eksklusif</li>
-                <li><CheckIcon size={14} /> Q&A live bulanan</li>
-                <li><CheckIcon size={14} /> <strong>Sertifikat resmi</strong></li>
-                <li><CheckIcon size={14} /> Update modul gratis selamanya</li>
-              </ul>
-              <Link className="button button--primary" href="#checkout-premium">
-                Pilih Premium
-                <ArrowRightIcon size={16} />
-              </Link>
-            </article>
-          </div>
-          <p className="lp-pricing__note">
-            <ClockIcon size={14} style={{ display: "inline", verticalAlign: "middle", marginRight: 6 }} />
-            Promo berakhir [TANGGAL_PROMO]. Garansi 7 hari uang kembali.
-          </p>
-        </section>
-
         <section aria-label="FAQ">
           <div className="section-heading section-heading--center">
             <p className="eyebrow">FAQ</p>
@@ -283,20 +226,20 @@ export default function MulaiPage() {
         <section aria-label="Call to action">
           <div className="cta-banner">
             <div>
-              <p className="eyebrow">Mulai Sekarang</p>
-              <h2>Jangan tunggu besok — AI nggak nunggu siapa-siapa.</h2>
+              <p className="eyebrow">Siap Mulai?</p>
+              <h2>AI nggak nunggu siapa-siapa — mulai hari ini.</h2>
               <p className="lede" style={{ marginTop: 12 }}>
-                Daftar hari ini dan dapatkan harga promo launch. Garansi 7 hari uang kembali — nggak
-                cocok, dana balik.
+                Buat akun, isi profil belajarmu, dan langsung dapat rekomendasi 3 modul pertama
+                yang paling cocok.
               </p>
             </div>
             <div className="cta-banner__actions">
-              <Link className="button button--accent" href="#daftar">
-                Daftar Sekarang
+              <Link className="button button--accent" href="/daftar">
+                Daftar Akun
                 <ArrowRightIcon size={16} />
               </Link>
-              <Link className="button button--ghost" href="#modul">
-                Lihat Detail Modul
+              <Link className="button button--ghost" href="/modul">
+                Lihat Katalog
               </Link>
             </div>
           </div>
