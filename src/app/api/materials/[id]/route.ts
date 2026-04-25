@@ -7,9 +7,15 @@ import { deleteObject } from "../../../../lib/storage";
 import { modulesByMentor } from "../../../../lib/content";
 import { auditLog } from "../../../../lib/audit";
 
+const noteSchema = z.object({
+  slideIndex: z.number().int().min(0).max(5000),
+  note: z.string().max(4000),
+});
+
 const updateSchema = z.object({
   title: z.string().max(200).nullable().optional(),
   totalPages: z.number().int().min(1).max(5000).optional(),
+  slideNotes: z.array(noteSchema).max(5000).optional(),
 });
 
 /**
@@ -46,6 +52,7 @@ export async function PATCH(
       data: {
         title: body.title === null ? null : body.title ?? undefined,
         totalPages: body.totalPages ?? undefined,
+        slideNotesJson: body.slideNotes !== undefined ? body.slideNotes : undefined,
       },
     });
 

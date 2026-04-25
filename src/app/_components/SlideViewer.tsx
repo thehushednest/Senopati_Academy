@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRightIcon, CheckIcon, ClockIcon } from "./Icon";
 
+type SlideNote = { slideIndex: number; note: string };
+
 type Props = {
   materialId: string;
   pdfUrl: string;
@@ -13,6 +15,12 @@ type Props = {
   readOnly?: boolean;
   /** Callback saat maxSlide berubah — dipakai untuk unlock tombol selesai di parent */
   onMaxSlideReached?: (maxSlide: number, totalPages: number) => void;
+  /** Tampilkan panel speaker notes (untuk tutor/admin) */
+  showNotes?: boolean;
+  /** Initial notes data (kalau showNotes=true) */
+  initialNotes?: SlideNote[];
+  /** Tutor/admin boleh edit notes (false untuk preview-only mode) */
+  canEditNotes?: boolean;
 };
 
 // pdfjs-dist dimuat lazy di effect supaya tidak dieksekusi di SSR
@@ -33,6 +41,9 @@ export function SlideViewer({
   initialMaxSlide,
   readOnly,
   onMaxSlideReached,
+  showNotes,
+  initialNotes,
+  canEditNotes,
 }: Props) {
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
   const [totalPages, setTotalPages] = useState(0);
@@ -42,11 +53,67 @@ export function SlideViewer({
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Speaker notes state — keyed by slideIndex
+  const initialNotesMap = new Map<number, string>(
+    (initialNotes ?? []).map((n) => [n.slideIndex, n.note]),
+  );
+  const [notesMap, setNotesMap] = useState<Map<number, string>>(initialNotesMap);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mainCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const thumbsContainerRef = useRef<HTMLDivElement | null>(null);
   const saveTimerRef = useRef<number | null>(null);
   const thumbnailCache = useRef<Map<number, string>>(new Map());
+
+  // Sync noteDraft dengan slide aktif saat ganti slide
+  useEffect(() => {
+    if (!showNotes) return;
+    setNoteDraft(notesMap.get(currentSlide) ?? "");
+    setNoteSaved(false);
+  }, [currentSlide, showNotes, notesMap]);
+
+  const saveNote = async () => {
+    if (!showNotes || !canEditNotes) return;
+    const trimmed = noteDraft.trim();
+    const existing = notesMap.get(currentSlide) ?? "";
+    if (trimmed === existing) {
+      setNoteSaved(false);
+      return;
+    }
+
+    setNoteSaving(true);
+    try {
+      // Build full notes array — replace/add current slide
+      const newMap = new Map(notesMap);
+      if (trimmed === "") {
+        newMap.delete(currentSlide);
+      } else {
+        newMap.set(currentSlide, trimmed);
+      }
+      const slideNotes = Array.from(newMap.entries())
+        .map(([slideIndex, note]) => ({ slideIndex, note }))
+        .sort((a, b) => a.slideIndex - b.slideIndex);
+
+      const res = await fetch(`/api/materials/${materialId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slideNotes }),
+      });
+      if (!res.ok) {
+        throw new Error("Gagal menyimpan catatan");
+      }
+      setNotesMap(newMap);
+      setNoteSaved(true);
+      window.setTimeout(() => setNoteSaved(false), 2000);
+    } catch (err) {
+      console.error("[saveNote]", err);
+    } finally {
+      setNoteSaving(false);
+    }
+  };
 
   // Load PDF document (lazy import pdfjs-dist)
   useEffect(() => {
@@ -394,6 +461,91 @@ export function SlideViewer({
               render={renderThumb}
             />
           ))}
+        </div>
+      ) : null}
+
+      {showNotes ? (
+        <div
+          style={{
+            background: "#f8fafc",
+            color: "#0f172a",
+            borderRadius: 12,
+            padding: 14,
+            border: "1px solid rgba(15, 23, 42, 0.08)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 8,
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            <strong style={{ fontSize: "0.84rem", color: "var(--ink)" }}>
+              📝 Speaker Notes — Slide {currentSlide + 1}
+            </strong>
+            <small style={{ color: "var(--muted)", fontSize: "0.74rem" }}>
+              {canEditNotes
+                ? "Hanya tutor & admin yang lihat catatan ini."
+                : "Mode preview — tidak bisa edit."}
+            </small>
+          </div>
+          {canEditNotes ? (
+            <>
+              <textarea
+                className="form-input"
+                rows={4}
+                value={noteDraft}
+                onChange={(e) => setNoteDraft(e.target.value)}
+                onBlur={saveNote}
+                placeholder="Tulis catatan untuk slide ini — talking points, contoh nyata, pertanyaan ke audience, dll."
+                maxLength={4000}
+                style={{ resize: "vertical", minHeight: 80 }}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: 6,
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <small style={{ color: "var(--muted)", fontSize: "0.74rem" }}>
+                  Tersimpan otomatis saat klik di luar field
+                </small>
+                <small
+                  style={{
+                    fontSize: "0.74rem",
+                    color: noteSaving
+                      ? "var(--muted)"
+                      : noteSaved
+                      ? "var(--brand-strong)"
+                      : "transparent",
+                  }}
+                >
+                  {noteSaving ? "Menyimpan…" : noteSaved ? "✓ Tersimpan" : "—"}
+                </small>
+              </div>
+            </>
+          ) : (
+            <div
+              style={{
+                whiteSpace: "pre-wrap",
+                color: "var(--ink-soft)",
+                fontSize: "0.88rem",
+                lineHeight: 1.6,
+                minHeight: 40,
+              }}
+            >
+              {notesMap.get(currentSlide) || (
+                <em style={{ color: "var(--muted)" }}>Tidak ada catatan untuk slide ini.</em>
+              )}
+            </div>
+          )}
         </div>
       ) : null}
 

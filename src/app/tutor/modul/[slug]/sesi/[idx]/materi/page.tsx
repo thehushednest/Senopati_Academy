@@ -5,6 +5,8 @@ import { DashboardRightBar } from "../../../../../../_components/DashboardRightB
 import { DashboardSidebar } from "../../../../../../_components/DashboardSidebar";
 import { DashboardTopbar } from "../../../../../../_components/DashboardTopbar";
 import { SlideUploader } from "../../../../../../_components/SlideUploader";
+import { SlideViewer } from "../../../../../../_components/SlideViewer";
+import { RollbackVersionButton } from "../../../../../../_components/RollbackVersionButton";
 import { ArrowRightIcon, ClockIcon } from "../../../../../../_components/Icon";
 import { prisma } from "../../../../../../../lib/prisma";
 import { findModule, modulesByMentor } from "../../../../../../../lib/content";
@@ -153,6 +155,32 @@ export default async function TutorMateriUploadPage({
             />
           </div>
 
+          {material ? (
+            <div className="dashboard-section">
+              <header className="dashboard-section__head">
+                <h2>Preview &amp; Speaker Notes</h2>
+                <small style={{ color: "var(--muted)", fontSize: "0.78rem" }}>
+                  Catatan otomatis tersimpan saat klik di luar field
+                </small>
+              </header>
+              <SlideViewer
+                materialId={material.id}
+                pdfUrl={material.pdfUrl}
+                filename={material.pdfFilename}
+                initialLastSlide={0}
+                initialMaxSlide={0}
+                readOnly
+                showNotes
+                canEditNotes
+                initialNotes={
+                  Array.isArray(material.slideNotesJson)
+                    ? (material.slideNotesJson as Array<{ slideIndex: number; note: string }>)
+                    : []
+                }
+              />
+            </div>
+          ) : null}
+
           {material && material.versions.length > 1 ? (
             <div className="dashboard-section">
               <header className="dashboard-section__head">
@@ -166,33 +194,48 @@ export default async function TutorMateriUploadPage({
                   <span>File</span>
                   <span>Size</span>
                   <span>Catatan</span>
+                  <span>Aksi</span>
                 </div>
-                {material.versions.map((v, idx) => (
-                  <div className="review-table__row" role="row" key={v.id}>
-                    <span>
-                      <strong>
-                        {idx === 0 ? "Aktif" : `v${material.versions.length - idx}`}
-                      </strong>
-                      <br />
-                      <small style={{ color: "var(--muted)" }}>
-                        <ClockIcon size={10} />{" "}
-                        {new Date(v.uploadedAt).toLocaleDateString("id-ID")}
-                      </small>
-                    </span>
-                    <span>
-                      <strong>{v.uploadedBy.name}</strong>
-                    </span>
-                    <span>
-                      <a href={v.pdfUrl} target="_blank" rel="noopener noreferrer">
-                        {v.pdfFilename}
-                      </a>
-                    </span>
-                    <span>{humanSize(v.pdfSizeBytes)}</span>
-                    <span>
-                      <small style={{ color: "var(--muted)" }}>{v.changeNote ?? "—"}</small>
-                    </span>
-                  </div>
-                ))}
+                {material.versions.map((v, idx) => {
+                  const isActive = v.objectKey === material.objectKey;
+                  return (
+                    <div className="review-table__row" role="row" key={v.id}>
+                      <span>
+                        <strong>
+                          {isActive ? "Aktif" : `v${material.versions.length - idx}`}
+                        </strong>
+                        <br />
+                        <small style={{ color: "var(--muted)" }}>
+                          <ClockIcon size={10} />{" "}
+                          {new Date(v.uploadedAt).toLocaleDateString("id-ID")}
+                        </small>
+                      </span>
+                      <span>
+                        <strong>{v.uploadedBy.name}</strong>
+                      </span>
+                      <span>
+                        <a href={v.pdfUrl} target="_blank" rel="noopener noreferrer">
+                          {v.pdfFilename}
+                        </a>
+                      </span>
+                      <span>{humanSize(v.pdfSizeBytes)}</span>
+                      <span>
+                        <small style={{ color: "var(--muted)" }}>{v.changeNote ?? "—"}</small>
+                      </span>
+                      <span>
+                        {isActive ? (
+                          <small style={{ color: "var(--brand-strong)", fontWeight: 700 }}>—</small>
+                        ) : (
+                          <RollbackVersionButton
+                            materialId={material.id}
+                            versionId={v.id}
+                            versionLabel={`v${material.versions.length - idx} (${v.pdfFilename})`}
+                          />
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ) : null}

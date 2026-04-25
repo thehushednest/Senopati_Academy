@@ -132,6 +132,13 @@ export default async function PlayerPage({
                   initialLastSlide={slideProgress?.lastSlideIndex ?? 0}
                   initialMaxSlide={slideProgress?.maxSlideIndex ?? 0}
                   readOnly={!viewerIsStudent}
+                  showNotes={!viewerIsStudent}
+                  canEditNotes={false}
+                  initialNotes={
+                    Array.isArray(material.slideNotesJson)
+                      ? (material.slideNotesJson as Array<{ slideIndex: number; note: string }>)
+                      : []
+                  }
                 />
                 <div className="player__chapters">
                   <span>Sesi</span>
