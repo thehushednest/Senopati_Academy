@@ -214,14 +214,24 @@ export default async function LiveSessionPage() {
                             status={e.status}
                           />
                           {(e.status === "live" || (rsvped && e.status === "scheduled")) ? (
-                            <a
-                              href={e.meetingUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="button button--primary button--sm"
-                            >
-                              <PlayIcon size={12} /> Masuk
-                            </a>
+                            <>
+                              <a
+                                href={`/live-session/${e.id}/room`}
+                                className="button button--primary button--sm"
+                              >
+                                <PlayIcon size={12} /> Buka Slide Room
+                              </a>
+                              {e.meetingUrl ? (
+                                <a
+                                  href={e.meetingUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="button button--ghost button--sm"
+                                >
+                                  Meeting URL
+                                </a>
+                              ) : null}
+                            </>
                           ) : null}
                         </div>
                       </div>

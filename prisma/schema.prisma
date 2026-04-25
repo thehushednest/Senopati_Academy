@@ -759,12 +759,19 @@ model LiveEvent {
   moduleSlug      String?         @map("module_slug")
   scheduledAt     DateTime        @map("scheduled_at")
   durationMinutes Int             @default(60) @map("duration_minutes")
-  // External meeting URL (Zoom, Google Meet, Jitsi, dll).
-  meetingUrl      String          @map("meeting_url")
+  // External meeting URL (Zoom, Google Meet, Jitsi, dll). Optional —
+  // event in-class (1 ruangan fisik) cukup pakai slide room saja tanpa URL.
+  meetingUrl      String?         @map("meeting_url")
   // Recording URL — diisi tutor setelah event selesai. Public.
   recordingUrl    String?         @map("recording_url")
   status          LiveEventStatus @default(scheduled)
   maxParticipants Int?            @map("max_participants")
+  // In-platform presenter mode (slide sync). Diisi saat host start present,
+  // di-clear saat end. Stored sebagai SessionMaterial.id (no FK — material bisa
+  // didelete tanpa cascade ke event metadata).
+  presentMaterialId String?       @map("present_material_id") @db.Uuid
+  presentSlide      Int?          @map("present_slide")
+  presentingSince   DateTime?     @map("presenting_since")
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")
 

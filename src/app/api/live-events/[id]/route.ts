@@ -11,7 +11,7 @@ const updateSchema = z.object({
   description: z.string().max(4000).nullable().optional(),
   scheduledAt: z.string().datetime().optional(),
   durationMinutes: z.number().int().min(5).max(480).optional(),
-  meetingUrl: z.string().url().optional(),
+  meetingUrl: z.string().url().nullable().optional(),
   recordingUrl: z.string().url().nullable().optional(),
   status: z.enum(["scheduled", "live", "ended", "cancelled"]).optional(),
   maxParticipants: z.number().int().min(1).max(10000).nullable().optional(),
@@ -74,7 +74,7 @@ export async function PATCH(
         description: body.description === null ? null : body.description ?? undefined,
         scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : undefined,
         durationMinutes: body.durationMinutes ?? undefined,
-        meetingUrl: body.meetingUrl ?? undefined,
+        meetingUrl: body.meetingUrl === null ? null : body.meetingUrl ?? undefined,
         recordingUrl: body.recordingUrl === null ? null : body.recordingUrl ?? undefined,
         status: body.status ?? undefined,
         maxParticipants:

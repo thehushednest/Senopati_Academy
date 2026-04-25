@@ -166,13 +166,21 @@ export default async function TutorLivePage() {
                       </div>
                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                         <a
-                          href={e.meetingUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="button button--secondary button--sm"
+                          href={`/live-session/${e.id}/room`}
+                          className="button button--primary button--sm"
                         >
-                          <PlayIcon size={12} /> Buka Meeting Link
+                          <PlayIcon size={12} /> Buka Slide Room
                         </a>
+                        {e.meetingUrl ? (
+                          <a
+                            href={e.meetingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="button button--ghost button--sm"
+                          >
+                            Meeting URL
+                          </a>
+                        ) : null}
                         <LiveEventActions
                           eventId={e.id}
                           status={e.status}

@@ -13,7 +13,7 @@ const createSchema = z.object({
   moduleSlug: z.string().min(1).max(120).optional().nullable(),
   scheduledAt: z.string().datetime(),
   durationMinutes: z.number().int().min(5).max(480).default(60),
-  meetingUrl: z.string().url(),
+  meetingUrl: z.string().url().optional().nullable(),
   maxParticipants: z.number().int().min(1).max(10000).optional().nullable(),
 });
 
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
         moduleSlug: body.moduleSlug ?? null,
         scheduledAt,
         durationMinutes: body.durationMinutes,
-        meetingUrl: body.meetingUrl,
+        meetingUrl: body.meetingUrl ?? null,
         maxParticipants: body.maxParticipants ?? null,
       },
       include: {

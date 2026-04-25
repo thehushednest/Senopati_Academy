@@ -50,10 +50,6 @@ export function CreateLiveEventForm({ modules, isAdmin }: Props) {
       setError("Judul minimal 3 karakter");
       return;
     }
-    if (!meetingUrl.trim()) {
-      setError("Meeting URL wajib diisi (Zoom, Meet, atau Jitsi link)");
-      return;
-    }
     setSubmitting(true);
     try {
       // Convert local datetime ke ISO UTC
@@ -67,7 +63,7 @@ export function CreateLiveEventForm({ modules, isAdmin }: Props) {
           moduleSlug: moduleSlug || null,
           scheduledAt: scheduledAtIso,
           durationMinutes,
-          meetingUrl: meetingUrl.trim(),
+          meetingUrl: meetingUrl.trim() || null,
           maxParticipants: maxParticipants ? Number.parseInt(maxParticipants, 10) : null,
         }),
       });
@@ -207,9 +203,10 @@ export function CreateLiveEventForm({ modules, isAdmin }: Props) {
 
       <fieldset className="form-field">
         <legend>
-          <strong>Meeting URL</strong>
+          <strong>Meeting URL (opsional)</strong>
           <span>
-            Link Zoom, Google Meet, Jitsi, atau platform meeting lain. Murid akan masuk via link ini.
+            Link Zoom, Google Meet, Jitsi, atau platform meeting lain. Kosongkan untuk
+            event in-class — peserta cukup buka Slide Room di-platform.
           </span>
         </legend>
         <input
@@ -218,7 +215,6 @@ export function CreateLiveEventForm({ modules, isAdmin }: Props) {
           value={meetingUrl}
           onChange={(e) => setMeetingUrl(e.target.value)}
           placeholder="https://meet.google.com/abc-defg-hij"
-          required
         />
       </fieldset>
 
