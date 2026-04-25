@@ -9,12 +9,57 @@ type Props = {
   sessionIndex?: number;
 };
 
+const ALLOWED_EXTS = [".pdf", ".png", ".jpg", ".jpeg", ".webp", ".txt", ".md"];
+const MAX_SIZE_MB = 10;
+
+const CONTENT_TYPE_BY_EXT: Record<string, string> = {
+  ".pdf": "application/pdf",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".txt": "text/plain",
+  ".md": "text/markdown",
+};
+
+function extOf(filename: string): string {
+  const dot = filename.lastIndexOf(".");
+  return dot >= 0 ? filename.slice(dot).toLowerCase() : "";
+}
+
+function humanSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function AssignmentForm({ briefTitle, moduleSlug, sessionIndex }: Props) {
   const [text, setText] = useState("");
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [phase, setPhase] = useState<"idle" | "signing" | "uploading" | "submitting">("idle");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const pickFile = (f: File | null) => {
+    setFileError(null);
+    setUploadProgress(0);
+    if (!f) {
+      setFile(null);
+      return;
+    }
+    const ext = extOf(f.name);
+    if (!ALLOWED_EXTS.includes(ext)) {
+      setFileError(`Format ${ext || "ini"} tidak didukung. Pakai PDF / PNG / JPG / WEBP / TXT / MD.`);
+      return;
+    }
+    if (f.size > MAX_SIZE_MB * 1024 * 1024) {
+      setFileError(`File melebihi batas ${MAX_SIZE_MB} MB.`);
+      return;
+    }
+    setFile(f);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,12 +67,65 @@ export function AssignmentForm({ briefTitle, moduleSlug, sessionIndex }: Props) 
     setError(null);
 
     if (!moduleSlug || sessionIndex === undefined) {
-      // Fallback UI-only mode kalau komponen dipakai tanpa konteks modul.
       setSubmitted(true);
       return;
     }
 
-    setSubmitting(true);
+    let attachmentUrl: string | null = null;
+
+    // 1. Upload file kalau ada
+    if (file) {
+      try {
+        setPhase("signing");
+        const ext = extOf(file.name);
+        const contentType = CONTENT_TYPE_BY_EXT[ext];
+        if (!contentType) throw new Error("Format file tidak didukung");
+
+        const presignRes = await fetch("/api/assignment/presigned-upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            moduleSlug,
+            sessionIndex,
+            filename: file.name,
+            contentType,
+            sizeBytes: file.size,
+          }),
+        });
+        if (!presignRes.ok) {
+          const data = await presignRes.json().catch(() => ({ error: "Gagal request upload" }));
+          throw new Error(data.error ?? "Gagal request upload");
+        }
+        const presign = await presignRes.json();
+
+        setPhase("uploading");
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("PUT", presign.uploadUrl);
+          xhr.setRequestHeader("Content-Type", contentType);
+          xhr.upload.onprogress = (ev) => {
+            if (ev.lengthComputable) {
+              setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
+            }
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error(`Upload gagal (HTTP ${xhr.status})`));
+          };
+          xhr.onerror = () => reject(new Error("Upload gagal — cek koneksi"));
+          xhr.send(file);
+        });
+
+        attachmentUrl = presign.publicUrl;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Upload lampiran gagal");
+        setPhase("idle");
+        return;
+      }
+    }
+
+    // 2. Submit text + attachmentUrl
+    setPhase("submitting");
     try {
       const res = await fetch("/api/assignment/submit", {
         method: "POST",
@@ -36,8 +134,7 @@ export function AssignmentForm({ briefTitle, moduleSlug, sessionIndex }: Props) 
           moduleSlug,
           sessionIndex,
           text: text.trim(),
-          // File upload belum di-wire — kita simpan nama saja di future (S3/MinIO integration).
-          attachmentUrl: null,
+          attachmentUrl,
         }),
       });
       if (!res.ok) {
@@ -48,7 +145,7 @@ export function AssignmentForm({ briefTitle, moduleSlug, sessionIndex }: Props) 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal mengirim tugas");
     } finally {
-      setSubmitting(false);
+      setPhase("idle");
     }
   };
 
@@ -69,7 +166,8 @@ export function AssignmentForm({ briefTitle, moduleSlug, sessionIndex }: Props) 
           onClick={() => {
             setSubmitted(false);
             setText("");
-            setFileName(null);
+            setFile(null);
+            setUploadProgress(0);
           }}
         >
           Kirim versi baru
@@ -77,6 +175,8 @@ export function AssignmentForm({ briefTitle, moduleSlug, sessionIndex }: Props) 
       </div>
     );
   }
+
+  const busy = phase !== "idle";
 
   return (
     <form className="assignment-form" onSubmit={handleSubmit} noValidate>
@@ -100,18 +200,43 @@ export function AssignmentForm({ briefTitle, moduleSlug, sessionIndex }: Props) 
       <fieldset className="form-field">
         <legend>
           <strong>Lampiran (opsional)</strong>
-          <span>Bisa upload screenshot, link dokumen, atau file referensi pendukung.</span>
+          <span>
+            Screenshot, PDF dokumen pendukung, atau catatan singkat. Maks {MAX_SIZE_MB} MB. Format:
+            PDF, PNG, JPG, WEBP, TXT, MD.
+          </span>
         </legend>
         <label className="assignment-form__file">
           <input
             type="file"
-            onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+            accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.md,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/markdown"
+            onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
             hidden
+            disabled={busy}
           />
-          <span>Pilih file</span>
-          <small>{fileName ?? "Belum ada file dipilih"}</small>
+          <span>{file ? "Ganti file" : "Pilih file"}</span>
+          <small>
+            {file ? `${file.name} · ${humanSize(file.size)}` : "Belum ada file dipilih"}
+          </small>
         </label>
+        {fileError ? (
+          <p className="profile-form__hint" role="alert" style={{ color: "#c62828", marginTop: 6 }}>
+            {fileError}
+          </p>
+        ) : null}
       </fieldset>
+
+      {phase === "uploading" || phase === "signing" ? (
+        <div>
+          <div className="active-progress-bar" aria-hidden="true">
+            <span style={{ width: `${uploadProgress}%` }} />
+          </div>
+          <small style={{ color: "var(--muted)" }}>
+            {phase === "signing"
+              ? "Menyiapkan upload lampiran…"
+              : `Mengunggah lampiran… ${uploadProgress}%`}
+          </small>
+        </div>
+      ) : null}
 
       {error ? (
         <p className="profile-form__hint" role="alert" style={{ color: "#c62828" }}>
@@ -120,15 +245,21 @@ export function AssignmentForm({ briefTitle, moduleSlug, sessionIndex }: Props) 
       ) : null}
 
       <div className="assignment-form__actions">
-        <button type="button" className="button button--secondary" disabled={submitting}>
+        <button type="button" className="button button--secondary" disabled={busy}>
           Simpan Draft
         </button>
         <button
           type="submit"
           className="button button--primary"
-          disabled={text.trim().length < 30 || submitting}
+          disabled={text.trim().length < 30 || busy}
         >
-          {submitting ? "Mengirim…" : "Kirim Tugas"}
+          {phase === "submitting"
+            ? "Mengirim…"
+            : phase === "uploading"
+            ? "Mengunggah…"
+            : phase === "signing"
+            ? "Menyiapkan…"
+            : "Kirim Tugas"}
           <ArrowRightIcon size={16} />
         </button>
       </div>
