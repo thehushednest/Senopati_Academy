@@ -5309,6 +5309,13 @@ p {
   }
 }
 
+/* ---------- Slide uploader animations ---------- */
+
+@keyframes stripe-anim {
+  0% { background-position: 0 0; }
+  100% { background-position: 28px 0; }
+}
+
 /* ---------- Activity list ---------- */
 
 .activity-list {

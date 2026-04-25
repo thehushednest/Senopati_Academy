@@ -312,13 +312,28 @@ export function SlideUploader({ moduleSlug, sessionIndex, existing, afterDeleteR
         {busy ? (
           <div>
             <div className="active-progress-bar" aria-hidden="true">
-              <span style={{ width: `${progress}%` }} />
+              <span
+                style={{
+                  width: phase === "committing" ? "100%" : `${progress}%`,
+                  transition: phase === "committing" ? "none" : "width 0.2s ease",
+                  // Animated stripe saat convert (committing PPT/PPTX bisa lama)
+                  ...(phase === "committing" && file && extOf(file.name) !== ".pdf"
+                    ? {
+                        background:
+                          "repeating-linear-gradient(45deg, var(--brand-strong) 0 10px, rgba(24,194,156,0.6) 10px 20px)",
+                        animation: "stripe-anim 1.2s linear infinite",
+                      }
+                    : {}),
+                }}
+              />
             </div>
             <small style={{ color: "var(--muted)" }}>
               {phase === "signing"
                 ? "Menyiapkan upload URL…"
                 : phase === "uploading"
                 ? `Mengunggah… ${progress}%`
+                : file && extOf(file.name) !== ".pdf"
+                ? "Mengkonversi PPT → PDF di server (bisa 30-60 detik)…"
                 : "Menyimpan metadata…"}
             </small>
           </div>

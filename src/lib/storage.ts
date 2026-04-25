@@ -1,6 +1,7 @@
 import {
   S3Client,
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
@@ -85,4 +86,38 @@ export async function headObject(
   } catch {
     return null;
   }
+}
+
+/**
+ * Download object dari S3/MinIO ke buffer di memory. Cocok untuk file < 50MB
+ * (PPT/PPTX yang di-convert). Jangan dipakai untuk file besar.
+ */
+export async function downloadObject(objectKey: string): Promise<Buffer> {
+  const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: objectKey }));
+  if (!res.Body) throw new Error("Object body kosong");
+  const chunks: Buffer[] = [];
+  // Body adalah ReadableStream di Node.js
+  for await (const chunk of res.Body as AsyncIterable<Uint8Array>) {
+    chunks.push(Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
+
+/**
+ * Upload buffer ke S3/MinIO sebagai object baru. Dipakai setelah convert
+ * PPT→PDF — kita perlu push file PDF baru tanpa presigned URL.
+ */
+export async function uploadObject(params: {
+  objectKey: string;
+  body: Buffer;
+  contentType: string;
+}): Promise<void> {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: params.objectKey,
+      Body: params.body,
+      ContentType: params.contentType,
+    }),
+  );
 }

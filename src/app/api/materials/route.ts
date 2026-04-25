@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { prisma } from "../../../lib/prisma";
 import { requireUser } from "../../../lib/session";
 import { handleApiError, jsonError } from "../../../lib/api-utils";
-import { headObject, publicUrl } from "../../../lib/storage";
+import {
+  deleteObject,
+  downloadObject,
+  headObject,
+  publicUrl,
+  uploadObject,
+} from "../../../lib/storage";
 import { findModule, modulesByMentor } from "../../../lib/content";
 import { auditLog } from "../../../lib/audit";
+import { convertOfficeToPdf, isLibreOfficeAvailable } from "../../../lib/pdf-convert";
 
 const commitSchema = z.object({
   moduleSlug: z.string().min(1).max(120),
@@ -89,6 +97,55 @@ export async function POST(req: NextRequest) {
       return jsonError("File melebihi batas 50MB", 400);
     }
 
+    // Auto-convert kalau source format PPT/PPTX → PDF.
+    // Strategi: download original → spawn libreoffice → upload PDF baru →
+    // hapus original. Hasil akhir: SessionMaterial selalu point ke PDF.
+    let finalObjectKey = body.objectKey;
+    let finalSize = head.size;
+    let finalFilename = body.pdfFilename;
+
+    if (body.sourceFormat === "ppt" || body.sourceFormat === "pptx") {
+      if (!(await isLibreOfficeAvailable())) {
+        return jsonError(
+          "PPT/PPTX upload sementara tidak tersedia (LibreOffice tidak ter-install di server). Convert ke PDF dulu lalu upload ulang.",
+          503,
+        );
+      }
+      try {
+        const officeBuffer = await downloadObject(body.objectKey);
+        const pdfBuffer = await convertOfficeToPdf(officeBuffer, body.pdfFilename);
+
+        // Object key baru — replace ekstensi dengan .pdf
+        const newKey = body.objectKey.replace(/\.(pptx?|PPTX?)$/, ".pdf").replace(/\.(ppt|pptx)$/i, ".pdf");
+        // Fallback kalau regex tidak match (edge case key tanpa ekstensi)
+        const safeKey = newKey.endsWith(".pdf")
+          ? newKey
+          : `${body.objectKey}-${randomUUID()}.pdf`;
+
+        await uploadObject({
+          objectKey: safeKey,
+          body: pdfBuffer,
+          contentType: "application/pdf",
+        });
+
+        // Hapus original PPT — kita tidak butuh archive kalau sudah ada PDF.
+        // (Fase 4 nanti bisa tambah opsi keep original di version history)
+        await deleteObject(body.objectKey);
+
+        finalObjectKey = safeKey;
+        finalSize = pdfBuffer.length;
+        // Ubah filename .pptx jadi .pdf supaya download sesuai ekstensi
+        finalFilename = body.pdfFilename.replace(/\.(pptx?|PPTX?)$/i, ".pdf");
+      } catch (err) {
+        // Cleanup: hapus original yang gagal di-convert juga
+        await deleteObject(body.objectKey);
+        return jsonError(
+          err instanceof Error ? err.message : "Convert PPT ke PDF gagal",
+          500,
+        );
+      }
+    }
+
     const existing = await prisma.sessionMaterial.findUnique({
       where: {
         moduleSlug_sessionIndex: {
@@ -98,7 +155,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const pdfUrl = publicUrl(body.objectKey);
+    const pdfUrl = publicUrl(finalObjectKey);
 
     let material;
     if (existing) {
@@ -107,9 +164,9 @@ export async function POST(req: NextRequest) {
         where: { id: existing.id },
         data: {
           pdfUrl,
-          objectKey: body.objectKey,
-          pdfFilename: body.pdfFilename,
-          pdfSizeBytes: head.size,
+          objectKey: finalObjectKey,
+          pdfFilename: finalFilename,
+          pdfSizeBytes: finalSize,
           totalPages: null, // reset, client akan update setelah render
           sourceFormat: body.sourceFormat,
           title: body.title ?? existing.title,
@@ -118,9 +175,9 @@ export async function POST(req: NextRequest) {
           versions: {
             create: {
               pdfUrl,
-              objectKey: body.objectKey,
-              pdfFilename: body.pdfFilename,
-              pdfSizeBytes: head.size,
+              objectKey: finalObjectKey,
+              pdfFilename: finalFilename,
+              pdfSizeBytes: finalSize,
               sourceFormat: body.sourceFormat,
               uploadedById: user.id,
               changeNote: body.changeNote ?? null,
@@ -135,17 +192,17 @@ export async function POST(req: NextRequest) {
           sessionIndex: body.sessionIndex,
           title: body.title ?? null,
           pdfUrl,
-          objectKey: body.objectKey,
-          pdfFilename: body.pdfFilename,
-          pdfSizeBytes: head.size,
+          objectKey: finalObjectKey,
+          pdfFilename: finalFilename,
+          pdfSizeBytes: finalSize,
           sourceFormat: body.sourceFormat,
           uploadedById: user.id,
           versions: {
             create: {
               pdfUrl,
-              objectKey: body.objectKey,
-              pdfFilename: body.pdfFilename,
-              pdfSizeBytes: head.size,
+              objectKey: finalObjectKey,
+              pdfFilename: finalFilename,
+              pdfSizeBytes: finalSize,
               sourceFormat: body.sourceFormat,
               uploadedById: user.id,
               changeNote: body.changeNote ?? "Upload pertama",
@@ -162,9 +219,10 @@ export async function POST(req: NextRequest) {
       meta: {
         moduleSlug: body.moduleSlug,
         sessionIndex: body.sessionIndex,
-        filename: body.pdfFilename,
-        sizeBytes: head.size,
+        filename: finalFilename,
+        sizeBytes: finalSize,
         sourceFormat: body.sourceFormat,
+        converted: body.sourceFormat !== "pdf",
       },
     });
 
