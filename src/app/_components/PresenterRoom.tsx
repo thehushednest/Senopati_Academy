@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowRightIcon } from "./Icon";
 import { RoomSlideCanvas } from "./RoomSlideCanvas";
+import { RoomSidePanel } from "./RoomSidePanel";
 
 type Material = {
   id: string;
@@ -16,6 +17,7 @@ type Material = {
 
 type Props = {
   eventId: string;
+  currentUserId: string;
   materials: Material[];
   initialMaterialId: string | null;
   initialSlide: number | null;
@@ -24,11 +26,24 @@ type Props = {
 
 export function PresenterRoom({
   eventId,
+  currentUserId,
   materials,
   initialMaterialId,
   initialSlide,
   initialPdfUrl,
 }: Props) {
+  // SSE source — presenter butuh untuk receive chat + qna events.
+  // Slide events tidak di-subscribe (presenter yang push, bukan listen).
+  const [source, setSource] = useState<EventSource | null>(null);
+  useEffect(() => {
+    const es = new EventSource(`/api/live-events/${eventId}/stream`);
+    setSource(es);
+    return () => {
+      es.close();
+      setSource(null);
+    };
+  }, [eventId]);
+
   const [pickerOpen, setPickerOpen] = useState(initialMaterialId === null);
   const [selectedMaterialId, setSelectedMaterialId] = useState(
     initialMaterialId ?? materials[0]?.id ?? "",
@@ -145,17 +160,41 @@ export function PresenterRoom({
 
   if (materials.length === 0) {
     return (
-      <div className="catalog-empty">
-        <p>
-          Belum ada slide materi yang bisa kamu present. Upload PDF/PPT di halaman modul yang kamu
-          ampu dulu.
-        </p>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 360px)",
+          gap: 16,
+        }}
+        className="room-grid"
+      >
+        <div className="catalog-empty">
+          <p>
+            Belum ada slide materi yang bisa kamu present. Upload PDF/PPT di halaman modul yang kamu
+            ampu dulu.
+          </p>
+        </div>
+        <RoomSidePanel
+          eventId={eventId}
+          currentUserId={currentUserId}
+          isHostOrAdmin={true}
+          source={source}
+        />
       </div>
     );
   }
 
   return (
-    <div style={{ display: "grid", gap: 14 }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 360px)",
+        gap: 16,
+        alignItems: "stretch",
+      }}
+      className="room-grid"
+    >
+    <div style={{ display: "grid", gap: 14, minWidth: 0 }}>
       {pickerOpen ? (
         <div
           style={{
@@ -292,6 +331,13 @@ export function PresenterRoom({
           {error}
         </p>
       ) : null}
+    </div>
+      <RoomSidePanel
+        eventId={eventId}
+        currentUserId={currentUserId}
+        isHostOrAdmin={true}
+        source={source}
+      />
     </div>
   );
 }

@@ -11941,4 +11941,7 @@ body:has(.dashboard-app) {
   .register-form__row {
     grid-template-columns: 1fr;
   }
+  .room-grid {
+    grid-template-columns: 1fr !important;
+  }
 }

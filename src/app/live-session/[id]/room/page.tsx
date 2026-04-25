@@ -131,6 +131,7 @@ export default async function LiveRoomPage({ params }: PageProps) {
         {isPresenter ? (
           <PresenterRoom
             eventId={event.id}
+            currentUserId={viewer.id}
             materials={materials}
             initialMaterialId={event.presentMaterialId}
             initialSlide={event.presentSlide}
@@ -139,6 +140,8 @@ export default async function LiveRoomPage({ params }: PageProps) {
         ) : (
           <ViewerRoom
             eventId={event.id}
+            currentUserId={viewer.id}
+            isHostOrAdmin={isPresenter}
             initialState={{
               presenting: !!event.presentMaterialId,
               pdfUrl: initialPdfUrl,
