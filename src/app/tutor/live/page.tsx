@@ -1,86 +1,71 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { DashboardRightBar } from "../../_components/DashboardRightBar";
 import { DashboardSidebar } from "../../_components/DashboardSidebar";
 import { DashboardTopbar } from "../../_components/DashboardTopbar";
-import { ArrowRightIcon, ClockIcon, PenIcon, PlayIcon, UsersIcon } from "../../_components/Icon";
+import { CreateLiveEventForm } from "../../_components/CreateLiveEventForm";
+import { LiveEventActions } from "../../_components/LiveEventActions";
+import { ArrowRightIcon, ClockIcon, PlayIcon, UsersIcon } from "../../_components/Icon";
+import { prisma } from "../../../lib/prisma";
+import { getCurrentUser } from "../../../lib/session";
+import { findModule, modulesByMentor, MODULES } from "../../../lib/content";
 
 export const metadata: Metadata = {
   title: "Live Session — Tutor",
   robots: { index: false, follow: false },
-  alternates: { canonical: "/tutor/live" }
+  alternates: { canonical: "/tutor/live" },
 };
 
-type Session = {
-  id: string;
-  title: string;
-  type: "Q&A" | "Workshop" | "Office Hour" | "Masterclass";
-  date: string;
-  time: string;
-  duration: string;
-  registered: number;
-  capacity: number;
-  status: "ready" | "draft" | "done" | "live";
-  notes?: string;
-  attendance?: number;
-  rating?: number;
+export const dynamic = "force-dynamic";
+
+function formatDateTime(d: Date): string {
+  return new Intl.DateTimeFormat("id-ID", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+}
+
+const STATUS_LABEL: Record<string, { label: string; tone: string }> = {
+  scheduled: { label: "Terjadwal", tone: "submitted" },
+  live: { label: "Live Sekarang", tone: "reviewing" },
+  ended: { label: "Selesai", tone: "approved" },
+  cancelled: { label: "Dibatalkan", tone: "needs_revision" },
 };
 
-const SESSIONS: Session[] = [
-  {
-    id: "ts1",
-    title: "Q&A Mingguan Foundations",
-    type: "Q&A",
-    date: "Kamis, 18 Apr 2026",
-    time: "19.00 WIB",
-    duration: "90 menit",
-    registered: 42,
-    capacity: 80,
-    status: "ready",
-    notes: "Fokus: supervised vs unsupervised, bias data training"
-  },
-  {
-    id: "ts2",
-    title: "Workshop Prompt Engineering Level-Up",
-    type: "Workshop",
-    date: "Sabtu, 27 Apr 2026",
-    time: "10.00 WIB",
-    duration: "2 jam",
-    registered: 68,
-    capacity: 100,
-    status: "draft",
-    notes: "Outline slide belum final — target: Jumat 19.00"
-  },
-  {
-    id: "ts3",
-    title: "Office Hour: Intro to AI",
-    type: "Office Hour",
-    date: "Kamis, 2 Mei 2026",
-    time: "16.00 WIB",
-    duration: "60 menit",
-    registered: 18,
-    capacity: 30,
-    status: "ready"
-  },
-  {
-    id: "ts4",
-    title: "Masterclass Chain-of-Thought",
-    type: "Masterclass",
-    date: "Minggu, 11 Apr 2026",
-    time: "13.00 WIB",
-    duration: "90 menit",
-    registered: 54,
-    capacity: 80,
-    status: "done",
-    attendance: 38,
-    rating: 4.8
+export default async function TutorLivePage() {
+  const viewer = await getCurrentUser();
+  if (!viewer) return null;
+
+  const isAdmin = viewer.role === "admin";
+
+  // Fetch user's mentorSlug → daftar modul yang bisa di-pilih untuk scope
+  let availableModules = isAdmin ? MODULES : [];
+  let mentorSlug: string | null = null;
+  if (viewer.role === "tutor") {
+    const record = await prisma.user.findUnique({
+      where: { id: viewer.id },
+      select: { mentorSlug: true },
+    });
+    mentorSlug = record?.mentorSlug ?? null;
+    if (mentorSlug) {
+      availableModules = modulesByMentor(mentorSlug);
+    }
   }
-];
 
-export default function TutorLivePage() {
-  const upcoming = SESSIONS.filter((s) => s.status !== "done");
-  const past = SESSIONS.filter((s) => s.status === "done");
-  const totalRegistered = upcoming.reduce((s, e) => s + e.registered, 0);
+  const myEvents = await prisma.liveEvent.findMany({
+    where: { hostId: viewer.id },
+    orderBy: { scheduledAt: "desc" },
+    take: 50,
+    include: {
+      _count: { select: { rsvps: true } },
+    },
+  });
+
+  const upcoming = myEvents.filter((e) => e.status === "scheduled" || e.status === "live");
+  const past = myEvents.filter((e) => e.status === "ended" || e.status === "cancelled");
 
   return (
     <main className="academy-shell dashboard-shell">
@@ -93,107 +78,168 @@ export default function TutorLivePage() {
           <header className="dashboard-page-header">
             <div>
               <p className="eyebrow eyebrow--brand">Live Session</p>
-              <h1>Jadwal live yang kamu host</h1>
+              <h1>Jadwalkan &amp; kelola sesi live kamu</h1>
               <p>
-                {upcoming.length} sesi akan datang · {totalRegistered} peserta sudah daftar · {past.length}{" "}
-                rekaman terarsip. Pastikan prep slide siap minimal 4 jam sebelum live.
+                {isAdmin
+                  ? "Admin: bisa buat event ke modul mana pun atau platform-wide."
+                  : mentorSlug
+                  ? `Scope ke ${availableModules.length} modul yang kamu ampu. Murid yang punya progress di modul itu otomatis dapat notifikasi.`
+                  : "Akunmu belum di-map ke mentor track. Kamu hanya bisa buat event platform-wide (notify tutor lain)."}
               </p>
             </div>
-            <Link className="button button--primary" href="/tutor/live/baru">
-              <PlayIcon size={14} /> Jadwalkan Live
-            </Link>
           </header>
 
           <div className="dashboard-section">
-            <header className="dashboard-section__head">
-              <h2>Akan Datang</h2>
-              <span className="dashboard-section__count">{upcoming.length} sesi</span>
-            </header>
-            <div className="tutor-session-list">
-              {upcoming.map((s) => (
-                <article className="tutor-session-row" key={s.id}>
-                  <div className="tutor-session-row__date">
-                    <strong>{s.date.split(",")[1]?.trim()}</strong>
-                    <span>{s.time}</span>
-                    <small>{s.duration}</small>
-                  </div>
-                  <div className="tutor-session-row__body">
-                    <div className="tutor-session-row__head">
-                      <span className={`tutor-session-type tutor-session-type--${s.type.toLowerCase().replace(/\s|&/g, "-")}`}>
-                        {s.type}
-                      </span>
-                      <span className={`tutor-session-status tutor-session-status--${s.status}`}>
-                        <span className="tutor-session-status__dot" aria-hidden="true" />
-                        {s.status === "ready" ? "Siap Host" : s.status === "draft" ? "Draft Materi" : "Live"}
-                      </span>
-                    </div>
-                    <h3>{s.title}</h3>
-                    <div className="tutor-session-row__meta">
-                      <span>
-                        <UsersIcon size={14} /> {s.registered}/{s.capacity} terdaftar
-                      </span>
-                      <span>
-                        <ClockIcon size={14} /> {s.duration}
-                      </span>
-                    </div>
-                    {s.notes ? <p className="tutor-session-row__notes">Catatan: {s.notes}</p> : null}
-                  </div>
-                  <div className="tutor-session-row__actions">
-                    {s.status === "ready" ? (
-                      <Link className="button button--primary button--sm" href={`#${s.id}`}>
-                        <PlayIcon size={14} /> Mulai Host
-                      </Link>
-                    ) : (
-                      <Link className="button button--accent button--sm" href={`#${s.id}`}>
-                        <PenIcon size={14} /> Lengkapi
-                      </Link>
-                    )}
-                    <Link className="button button--secondary button--sm" href={`#edit-${s.id}`}>
-                      Edit Detail
-                    </Link>
-                    <Link className="button button--ghost button--sm" href={`#copy-${s.id}`}>
-                      Copy Link Zoom
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <CreateLiveEventForm
+              modules={availableModules.map((m) => ({ slug: m.slug, title: m.title }))}
+              isAdmin={isAdmin}
+            />
           </div>
 
           <div className="dashboard-section">
             <header className="dashboard-section__head">
-              <h2>Rekaman & Hasil</h2>
-              <span className="dashboard-section__count">{past.length} sesi selesai</span>
+              <h2>Akan Datang &amp; Sedang Live</h2>
+              <span className="dashboard-section__count">{upcoming.length} event</span>
             </header>
-            <div className="tutor-past-list">
-              {past.map((s) => (
-                <article className="tutor-past-row" key={s.id}>
-                  <span className="tutor-past-row__icon">
-                    <PlayIcon size={16} />
-                  </span>
-                  <div>
-                    <strong>{s.title}</strong>
-                    <span>
-                      {s.date} · {s.duration} · {s.type}
-                    </span>
-                  </div>
-                  <div className="tutor-past-row__stats">
-                    <div>
-                      <strong>{s.attendance}/{s.registered}</strong>
-                      <span>Hadir</span>
+            {upcoming.length === 0 ? (
+              <div className="catalog-empty">
+                <p>Belum ada event terjadwal. Klik tombol di atas untuk buat baru.</p>
+              </div>
+            ) : (
+              <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 12 }}>
+                {upcoming.map((e) => {
+                  const mod = e.moduleSlug ? findModule(e.moduleSlug) : null;
+                  const meta = STATUS_LABEL[e.status];
+                  return (
+                    <li
+                      key={e.id}
+                      style={{
+                        padding: 18,
+                        borderRadius: 14,
+                        background: "#ffffff",
+                        border: "1px solid rgba(15, 23, 42, 0.06)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 12,
+                          alignItems: "flex-start",
+                          flexWrap: "wrap",
+                          marginBottom: 12,
+                        }}
+                      >
+                        <div style={{ flex: "1 1 280px", minWidth: 0 }}>
+                          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 6 }}>
+                            <span className={`review-status review-status--${meta.tone}`}>{meta.label}</span>
+                            {mod ? (
+                              <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
+                                {mod.title}
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: "0.78rem", color: "var(--muted)", fontStyle: "italic" }}>
+                                Platform-wide
+                              </span>
+                            )}
+                          </div>
+                          <strong style={{ fontSize: "1.05rem", display: "block", marginBottom: 4 }}>
+                            {e.title}
+                          </strong>
+                          <small style={{ color: "var(--muted)", display: "block", marginBottom: 4 }}>
+                            <ClockIcon size={12} /> {formatDateTime(e.scheduledAt)} · {e.durationMinutes} menit
+                          </small>
+                          {e.description ? (
+                            <p style={{ margin: "8px 0 0 0", color: "var(--ink-soft)", fontSize: "0.88rem" }}>
+                              {e.description}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div style={{ textAlign: "right", flex: "0 0 auto" }}>
+                          <strong style={{ fontSize: "1.4rem", display: "block" }}>
+                            {e._count.rsvps}
+                          </strong>
+                          <small style={{ color: "var(--muted)" }}>
+                            <UsersIcon size={12} /> RSVP
+                            {e.maxParticipants ? ` / ${e.maxParticipants}` : ""}
+                          </small>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                        <a
+                          href={e.meetingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="button button--secondary button--sm"
+                        >
+                          <PlayIcon size={12} /> Buka Meeting Link
+                        </a>
+                        <LiveEventActions
+                          eventId={e.id}
+                          status={e.status}
+                          recordingUrl={e.recordingUrl}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          <div className="dashboard-section">
+            <header className="dashboard-section__head">
+              <h2>Riwayat Event</h2>
+              <span className="dashboard-section__count">{past.length} selesai/dibatalkan</span>
+            </header>
+            {past.length === 0 ? (
+              <div className="catalog-empty">
+                <p>Belum ada event yang selesai.</p>
+              </div>
+            ) : (
+              <div className="review-table">
+                <div className="review-table__head" role="row">
+                  <span>Tanggal</span>
+                  <span>Judul</span>
+                  <span>Modul</span>
+                  <span>Status</span>
+                  <span>RSVP</span>
+                  <span>Recording</span>
+                </div>
+                {past.map((e) => {
+                  const mod = e.moduleSlug ? findModule(e.moduleSlug) : null;
+                  const meta = STATUS_LABEL[e.status];
+                  return (
+                    <div className="review-table__row" role="row" key={e.id}>
+                      <span>
+                        <small style={{ color: "var(--muted)" }}>{formatDateTime(e.scheduledAt)}</small>
+                      </span>
+                      <span>
+                        <strong>{e.title}</strong>
+                      </span>
+                      <span>
+                        <small>{mod?.title ?? "Platform-wide"}</small>
+                      </span>
+                      <span>
+                        <span className={`review-status review-status--${meta.tone}`}>
+                          {meta.label}
+                        </span>
+                      </span>
+                      <span>{e._count.rsvps}</span>
+                      <span>
+                        {e.recordingUrl ? (
+                          <a href={e.recordingUrl} target="_blank" rel="noopener noreferrer">
+                            Buka rekaman
+                            <ArrowRightIcon size={10} />
+                          </a>
+                        ) : (
+                          <small style={{ color: "var(--muted)" }}>—</small>
+                        )}
+                      </span>
                     </div>
-                    <div>
-                      <strong>{s.rating}★</strong>
-                      <span>Rating</span>
-                    </div>
-                  </div>
-                  <Link className="button button--secondary button--sm" href={`/rekaman/${s.id}`}>
-                    Rekaman
-                    <ArrowRightIcon size={12} />
-                  </Link>
-                </article>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
 

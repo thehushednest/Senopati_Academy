@@ -64,6 +64,8 @@ model User {
   materialsUploaded      SessionMaterial[]          @relation("MaterialUploader")
   materialVersions       SessionMaterialVersion[]   @relation("MaterialVersionUploader")
   slideProgress          SlideProgress[]
+  liveEventsHosted       LiveEvent[]                @relation("LiveEventHost")
+  liveEventRsvps         LiveEventRSVP[]            @relation("LiveEventRSVP")
 
   @@map("users")
 }
@@ -735,6 +737,60 @@ model SlideProgress {
 
   @@unique([studentId, materialId])
   @@map("slide_progress")
+}
+
+// Live session terjadwal pakai external meeting tool (Zoom/Meet/Jitsi).
+// Tidak terkait dengan model LiveSession lama yang dirancang untuk in-platform
+// sync slide — itu unused sekarang, biarkan untuk kemungkinan future.
+enum LiveEventStatus {
+  scheduled
+  live
+  ended
+  cancelled
+}
+
+model LiveEvent {
+  id              String          @id @default(uuid()) @db.Uuid
+  title           String
+  description     String?         @db.Text
+  hostId          String          @map("host_id") @db.Uuid
+  // Optional scope ke modul tertentu. Kalau null → event "platform-wide"
+  // dan visible ke semua user.
+  moduleSlug      String?         @map("module_slug")
+  scheduledAt     DateTime        @map("scheduled_at")
+  durationMinutes Int             @default(60) @map("duration_minutes")
+  // External meeting URL (Zoom, Google Meet, Jitsi, dll).
+  meetingUrl      String          @map("meeting_url")
+  // Recording URL — diisi tutor setelah event selesai. Public.
+  recordingUrl    String?         @map("recording_url")
+  status          LiveEventStatus @default(scheduled)
+  maxParticipants Int?            @map("max_participants")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  host  User             @relation("LiveEventHost", fields: [hostId], references: [id])
+  rsvps LiveEventRSVP[]
+
+  @@index([scheduledAt])
+  @@index([moduleSlug])
+  @@index([hostId])
+  @@map("live_events")
+}
+
+model LiveEventRSVP {
+  id        String    @id @default(uuid()) @db.Uuid
+  eventId   String    @map("event_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  rsvpAt    DateTime  @default(now()) @map("rsvp_at")
+  // Set tutor manual setelah event selesai (Fase ini tidak auto-track attendance).
+  attended  Boolean?
+
+  event LiveEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User      @relation("LiveEventRSVP", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@map("live_event_rsvps")
 }
 
 model DailyActivity {
