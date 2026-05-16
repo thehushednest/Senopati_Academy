@@ -1,0 +1,289 @@
+/* Walkthrough Tutor — Udemy-style course player layout */
+
+.panduan-shell {
+  min-height: 100vh;
+  background: #0d1f3a;
+  color: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+}
+
+.panduan-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 20px;
+  background: #0a1729;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.panduan-back {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background 120ms ease-out;
+}
+.panduan-back:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.panduan-title-bar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.panduan-title-bar strong {
+  font-size: 0.98rem;
+  color: white;
+}
+.panduan-title-bar small {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.panduan-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 180px;
+}
+.panduan-progress small {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+.panduan-progress-bar {
+  width: 180px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.panduan-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #18c29c, #0fa886);
+  transition: width 300ms ease-out;
+}
+
+.panduan-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 1024px) {
+  .panduan-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panduan-main {
+  background: #0d1f3a;
+  overflow-y: auto;
+  padding-bottom: 32px;
+}
+
+.panduan-video-wrap {
+  background: #000;
+  aspect-ratio: 16 / 9;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.panduan-video {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.panduan-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px;
+  background: #0a1729;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+}
+.panduan-tab {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 14px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 120ms ease-out, border-color 120ms ease-out;
+}
+.panduan-tab:hover {
+  color: #f1f5f9;
+}
+.panduan-tab--active {
+  color: #18c29c;
+  border-bottom-color: #18c29c;
+}
+
+.panduan-tab-content {
+  padding: 24px 32px;
+  max-width: 780px;
+  font-size: 0.95rem;
+}
+.panduan-tab-content h1,
+.panduan-tab-content h2 {
+  color: white;
+}
+.panduan-tab-content a {
+  color: #18c29c;
+}
+.panduan-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* Sidebar */
+.panduan-sidebar {
+  background: #0a1729;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.panduan-sidebar-header {
+  position: sticky;
+  top: 0;
+  background: #0a1729;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 18px;
+  z-index: 1;
+}
+.panduan-sidebar-header strong {
+  display: block;
+  color: white;
+  font-size: 1rem;
+}
+.panduan-sidebar-header small {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.panduan-sections {
+  padding: 0;
+}
+.panduan-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.panduan-section-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 16px;
+  user-select: none;
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 100ms ease-out;
+}
+.panduan-section-summary::-webkit-details-marker {
+  display: none;
+}
+.panduan-section-summary:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.panduan-section-summary > div strong {
+  display: block;
+  color: white;
+  font-size: 0.88rem;
+}
+.panduan-section-summary > div small {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.74rem;
+  margin-top: 2px;
+}
+
+.panduan-chapter-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: #07111f;
+}
+.panduan-chapter {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+.panduan-chapter button {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms ease-out;
+}
+.panduan-chapter button:hover {
+  background: rgba(24, 194, 156, 0.08);
+}
+.panduan-chapter--active button {
+  background: rgba(24, 194, 156, 0.15);
+  color: #f1f5f9;
+}
+.panduan-chapter--active button:hover {
+  background: rgba(24, 194, 156, 0.2);
+}
+.panduan-chapter--done .panduan-chapter-check {
+  color: #18c29c;
+}
+
+.panduan-chapter-check {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.panduan-chapter-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.panduan-chapter-text strong {
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: inherit;
+}
+.panduan-chapter--active .panduan-chapter-text strong {
+  font-weight: 700;
+}
+.panduan-chapter-text small {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 3px;
+}
