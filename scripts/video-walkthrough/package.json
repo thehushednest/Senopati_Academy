@@ -1,0 +1,16 @@
+{
+  "name": "senopati-walkthrough-recorder",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Playwright recorder for the tutor walkthrough video (STORYBOARD.md rev-2).",
+  "scripts": {
+    "record": "tsx record.ts",
+    "record:headless": "RECORD_HEADLESS=1 tsx record.ts",
+    "record:with-review": "SENOPATI_RECORD_REVIEW=1 tsx record.ts",
+    "install:browsers": "playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0",
+    "tsx": "^4.21.0"
+  }
+}

@@ -1,0 +1,27 @@
+# Recording artifacts (regenerated per run)
+screen/*.webm
+screen/*.mp4
+temp/
+timestamps.json
+
+# Output renders (large, regenerated)
+output/*.mp4
+output/*.srt
+
+# User-provided assets — checked in separately if needed
+assets/character.png
+vo/*.mp3
+lipsync/*.mp4
+
+# Node / Playwright
+node_modules/
+.playwright/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
