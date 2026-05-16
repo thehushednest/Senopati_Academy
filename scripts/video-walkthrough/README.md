@@ -65,17 +65,25 @@ Output:
 
 ```bash
 source .venv/bin/activate
-python compose.py
+python compose.py                     # default: per-chapter + combined
+python compose.py --mode per-chapter  # 12 MP4s, no concat
+python compose.py --mode combined     # 1 concatenated MP4
+python compose.py --only 5,8          # regenerate only specific chapters
 ```
 
 Flag berguna:
+- `--mode {per-chapter,combined,both}` — default `both`. Per-chapter
+  baik buat review/replace individual; combined baik untuk publish akhir.
+- `--only N,M,...` — regenerate hanya chapter tertentu (mis. setelah
+  ganti VO Ch.5 + Ch.8 saja)
 - `--no-pip` — skip PiP overlay (preview screen-only, jauh lebih cepat)
 - `--skip-zoom` — skip zoom-in effects
-- `--bgm path/to/track.mp3` — mix background music di -24 dB
-- `--out custom/path.mp4` — override output path
+- `--bgm path/to/track.mp3` — mix background music di -24 dB (combined only)
+- `--out custom/path.mp4` — override combined output path
 
 Output:
-- `output/walkthrough-tutor-YYYY-MM-DD.mp4` — final video 1080p
+- `output/chapters/chapter-NN-<slug>.mp4` — 12 per-chapter videos
+- `output/walkthrough-tutor-YYYY-MM-DD.mp4` — final concatenated 1080p
 - `output/walkthrough-tutor-YYYY-MM-DD.srt` — subtitle bahasa Indonesia
 
 ## Penyesuaian umum

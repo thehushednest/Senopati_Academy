@@ -332,55 +332,10 @@ def write_srt(chapters: list[ChapterMark], path: Path) -> None:
 
 # ---------- main ----------
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--no-pip", action="store_true")
-    ap.add_argument("--skip-zoom", action="store_true")
-    ap.add_argument("--bgm", type=str, default=None)
-    ap.add_argument("--out", type=str, default=None)
-    args = ap.parse_args()
-
-    chapters, recording_path = load_timestamps()
-    if not recording_path or not Path(recording_path).exists():
-        raise SystemExit(f"Screen recording not found at {recording_path}")
-
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = Path(args.out) if args.out else OUTPUT_DIR / f"walkthrough-tutor-{dt.date.today():%Y-%m-%d}.mp4"
-    srt_path = out_path.with_suffix(".srt")
-
-    print(f"Loading screen recording: {recording_path}")
-    screen = VideoFileClip(str(recording_path), audio=False).resize((W, H))
-
-    clips = []
-    for ch in chapters:
-        print(f"▶ Chapter {ch.num}: {ch.title} ({(ch.end_ms - ch.start_ms)/1000:.1f}s)")
-        try:
-            clip = build_chapter_clip(ch, screen, args)
-        except Exception as err:
-            print(f"  ✖ chapter {ch.num} failed: {err}")
-            continue
-        clips.append(clip)
-
-    # Outro 10s.
-    outro = make_logo_outro(10.0)
-    # Silence audio under outro so VO from chapter 12 doesn't leak.
-    outro = outro.set_audio(None)
-    clips.append(outro)
-
-    final = concatenate_videoclips(clips, method="compose")
-
-    # Background music.
-    if args.bgm:
-        bgm = AudioFileClip(args.bgm).volumex(10 ** (-24 / 20))  # -24 dB
-        bgm = bgm.fx(afx.audio_loop, duration=final.duration)
-        if final.audio is not None:
-            final = final.set_audio(CompositeAudioClip([final.audio, bgm]))
-        else:
-            final = final.set_audio(bgm)
-
-    print(f"\nRendering → {out_path}")
-    final.write_videofile(
-        str(out_path),
+def _render(clip, path: Path) -> None:
+    """Shared writer with consistent encoding settings."""
+    clip.write_videofile(
+        str(path),
         fps=FPS,
         codec="libx264",
         audio_codec="aac",
@@ -389,10 +344,99 @@ def main() -> None:
         threads=os.cpu_count() or 4,
     )
 
-    print(f"Writing SRT → {srt_path}")
-    write_srt(chapters, srt_path)
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--no-pip", action="store_true", help="skip PiP overlay")
+    ap.add_argument("--skip-zoom", action="store_true", help="skip zoom effects")
+    ap.add_argument("--bgm", type=str, default=None, help="background music mp3, mixed at -24dB")
+    ap.add_argument(
+        "--mode",
+        choices=["per-chapter", "combined", "both"],
+        default="both",
+        help="per-chapter: 12 MP4s; combined: 1 concatenated MP4; both (default): emit both",
+    )
+    ap.add_argument(
+        "--only",
+        type=str,
+        default=None,
+        help="comma-separated chapter numbers to render (e.g. '5,8'); default: all",
+    )
+    ap.add_argument("--out", type=str, default=None, help="combined output path (mode=combined/both)")
+    args = ap.parse_args()
+
+    chapters, recording_path = load_timestamps()
+    if not recording_path or not Path(recording_path).exists():
+        raise SystemExit(f"Screen recording not found at {recording_path}")
+
+    # Filter by --only.
+    if args.only:
+        wanted = {int(n.strip()) for n in args.only.split(",") if n.strip()}
+        chapters = [c for c in chapters if c.num in wanted]
+        print(f"Filtering to chapters: {sorted(wanted)}")
+
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    combined_path = (
+        Path(args.out)
+        if args.out
+        else OUTPUT_DIR / f"walkthrough-tutor-{dt.date.today():%Y-%m-%d}.mp4"
+    )
+    srt_path = combined_path.with_suffix(".srt")
+    per_chapter_dir = OUTPUT_DIR / "chapters"
+    per_chapter_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"Loading screen recording: {recording_path}")
+    screen = VideoFileClip(str(recording_path), audio=False).resize((W, H))
+
+    # Build each chapter clip; render per-chapter if requested.
+    clips = []
+    per_chapter_paths: list[Path] = []
+    for ch in chapters:
+        print(f"▶ Chapter {ch.num}: {ch.title} ({(ch.end_ms - ch.start_ms)/1000:.1f}s)")
+        try:
+            clip = build_chapter_clip(ch, screen, args)
+        except Exception as err:
+            print(f"  ✖ chapter {ch.num} failed: {err}")
+            continue
+
+        if args.mode in ("per-chapter", "both"):
+            slug = ch.title.lower().replace(" ", "-").replace(":", "").replace(",", "")
+            out = per_chapter_dir / f"chapter-{ch.num:02d}-{slug}.mp4"
+            print(f"  rendering → {out.name}")
+            _render(clip, out)
+            per_chapter_paths.append(out)
+
+        clips.append(clip)
+
+    if args.mode in ("combined", "both"):
+        # Outro 10s.
+        outro = make_logo_outro(10.0).set_audio(None)
+        clips.append(outro)
+
+        final = concatenate_videoclips(clips, method="compose")
+
+        # Background music (combined-only — per-chapter stays bare VO).
+        if args.bgm:
+            bgm = AudioFileClip(args.bgm).volumex(10 ** (-24 / 20))  # -24 dB
+            bgm = bgm.fx(afx.audio_loop, duration=final.duration)
+            if final.audio is not None:
+                final = final.set_audio(CompositeAudioClip([final.audio, bgm]))
+            else:
+                final = final.set_audio(bgm)
+
+        print(f"\nRendering combined → {combined_path}")
+        _render(final, combined_path)
+
+        print(f"Writing SRT → {srt_path}")
+        write_srt(chapters, srt_path)
 
     print("\nDone.")
+    if per_chapter_paths:
+        print(f"\nPer-chapter outputs ({len(per_chapter_paths)}):")
+        for p in per_chapter_paths:
+            print(f"  - {p}")
+    if args.mode in ("combined", "both"):
+        print(f"\nCombined output: {combined_path}")
 
 
 if __name__ == "__main__":
