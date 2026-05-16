@@ -1,18 +1,53 @@
 # Storyboard — Video Walkthrough Tutor Senopati Academy
 
-Target: **~6 menit MP4 1080p**, dual-layer (screen capture + character PiP),
+Target: **~7:30 menit MP4 1080p**, dual-layer (screen capture + character PiP),
 audience tutor baru / tutor onboarding.
+
+**Revisi 2026-05-16:** Diperluas dari 9 → 12 chapter agar mencakup seluruh
+menu sidebar tutor (Review Tugas/IELTS, Cerita Interaktif/Jeda, Pesan, Profil
+Saya). Email demo diperbaiki: `tutor.demo@asksenopati.com` (sebelumnya salah
+ketik `demo.tutor`).
 
 Workflow ringkas:
 1. Saya tulis storyboard ini → Anda review
-2. Anda generate character PNG (prompt di §11) + VO ElevenLabs (§12) +
-   lipsync HeyGen (§13)
+2. Anda generate character PNG (prompt di §14) + VO ElevenLabs (§15) +
+   lipsync HeyGen (§16)
 3. Saya tulis Playwright recorder + compositing script
 4. Render final MP4
 
 ---
 
-## 0. Spec Teknis
+## 0. Pre-flight Checklist (jalankan sekali sebelum recording)
+
+Hasil verifikasi DB lokal per 2026-05-16:
+
+| Check | Status | Aksi |
+|---|---|---|
+| Tutor demo (`tutor.demo@asksenopati.com`, Pak Reza Demo) | ✅ Ada | — |
+| Siswa demo (`siswa.demo@asksenopati.com`, Alya Pertiwi) | ✅ Ada | — |
+| Live event aktif (`Test Slide Sync In-Class`, module=`ai-prompts-101`) | ✅ Ada | Bisa langsung dipakai Chapter 10, atau seed event baru bertema "Demo Walkthrough" |
+| `Course` rows untuk tutor demo | ⚠️ 0 | Tidak blocking — `/tutor/modul` baca dari `getMyTaughtModules()` (combine content.ts + DB stats per mentorSlug) |
+| Schema drift (table `tutor_student_teachings`, kolom `courses.format` missing) | ⚠️ | Run `npx prisma migrate dev` sebelum recording supaya tidak ada UI error |
+
+**Recording prep commands:**
+
+```bash
+# 1. Apply pending migrations
+npx prisma migrate dev
+
+# 2. (Opsional) seed module shell jika belum
+npm run seed:modules-shell
+
+# 3. Pastikan flag review aktif kalau mau demo Chapter 8
+echo "NEXT_PUBLIC_REVIEW_ENABLED=true" >> .env.local
+
+# 4. Start dev server
+npm run dev
+```
+
+---
+
+## 1. Spec Teknis
 
 | Parameter | Nilai |
 |---|---|
@@ -21,7 +56,7 @@ Workflow ringkas:
 | Audio | 48kHz stereo, AAC 192kbps |
 | Codec video | H.264 high profile |
 | Container | MP4 |
-| Durasi target | 5:30 — 6:30 menit |
+| Durasi target | 7:00 — 7:45 menit |
 | Background music | Optional — instrumental ringan, -24 dB di bawah VO |
 
 **Layout dual-layer:**
@@ -67,8 +102,8 @@ HeyGen green screen → transparent.
 > menemani Bapak Ibu mengenal fitur-fitur platform yang akan jadi teman
 > mengajar sehari-hari. Yuk, kita mulai!
 
-**Character expression:** Smiling, slight wave (pakai prompt HeyGen
-"warm welcoming smile, slight head tilt").
+**Character expression:** Smiling, slight wave (prompt HeyGen "warm
+welcoming smile, slight head tilt").
 
 **Visual cue:** Title card kecil di tengah "Walkthrough Tutor — Senopati
 Academy" yang fade out di detik 4-5.
@@ -82,12 +117,12 @@ Academy" yang fade out di detik 4-5.
 
 **Action sequence (Playwright):**
 - Klik tombol "Masuk" → navigasi ke `/login`
-- Type email `demo.tutor@asksenopati.com` (slow typing animation 80wpm)
+- Type email `tutor.demo@asksenopati.com` (slow typing animation 80wpm)
 - Type password (masked)
-- Klik "Masuk" → redirect ke `/dashboard`
-- Pause 2 detik di dashboard — biarkan VO mention bagian dashboard
+- Klik "Masuk" → redirect ke `/tutor` (dashboard)
+- Pause 2 detik — biarkan VO mention bagian dashboard
 - Cursor hover ke kartu "Modul aktif" (top), lalu ke "Thread terbaru"
-- Hover ke greeting card di pojok kanan atas dengan nama tutor
+- Hover ke greeting card di pojok kanan atas dengan nama "Pak Reza Demo"
 
 **VO bahasa Indonesia:**
 
@@ -108,29 +143,34 @@ yang aktif" (detik 0:25-0:30). Zoom-out balik normal di akhir chapter.
 ## Chapter 3 — Tour Sidebar Navigation (30 detik)
 
 **Durasi:** 0:45–1:15
-**Word count:** ~75 kata
+**Word count:** ~70 kata
 
 **Action sequence (Playwright):**
 - Cursor pindah ke sidebar kiri
-- Hover berurutan tiap menu (delay 2.5 detik per menu):
+- Hover cepat berurutan (delay 1.8 detik per menu):
   1. Modul Saya
   2. Bahan Ajar
-  3. Live Session
-  4. Pesan
-  5. Siswa & Diskusi
-  6. Materi & Soal
-  7. Analitik
+  3. Review Tugas (kalau `NEXT_PUBLIC_REVIEW_ENABLED=true`)
+  4. Review IELTS Writing
+  5. Live Session
+  6. Pesan
+  7. Siswa & Diskusi
+  8. Materi & Soal
+  9. Analitik
+  10. Cerita Interaktif
+  11. Profil Saya
 - Cursor pulse setiap hover (lingkaran teal expand+fade)
 
 **VO bahasa Indonesia:**
 
-> Di sebelah kiri ada menu navigasi utama. Modul Saya untuk kelola modul
-> yang Anda ajar. Bahan Ajar untuk file materi. Live Session untuk jadwal
-> dan ruang siaran langsung. Pesan untuk diskusi privat sama siswa.
-> Siswa dan Diskusi untuk pantau perkembangan tiap siswa. Materi dan
-> Soal untuk bikin kuis. Analitik untuk lihat performa.
+> Di sebelah kiri ada sebelas menu utama. Mulai dari Modul Saya, Bahan
+> Ajar, Review Tugas, Live Session, Pesan, Siswa, Materi dan Soal,
+> Analitik, Cerita Interaktif, sampai Profil. Saya akan jelaskan
+> masing-masing satu per satu, jadi tenang aja kalau sekarang terasa
+> banyak — kita akan tour lengkap di chapter berikutnya.
 
-**Character expression:** Listing, slight nodding tiap nama menu disebut.
+**Character expression:** Listing dengan gesture menunjuk ke kiri, light
+smile reassuring di kalimat "tenang aja".
 
 **Visual cue:** Subtle highlight (border teal 2px) muncul di menu yang
 sedang di-hover, sync dengan VO.
@@ -144,9 +184,9 @@ sedang di-hover, sync dengan VO.
 
 **Action sequence (Playwright):**
 - Klik "Modul Saya" di sidebar → `/tutor/modul`
-- Scroll ke modul "Paham AI" series (Modul 01-22)
-- Klik kartu Modul 01: "Introduction to AI"
-- Tampilkan detail page modul: hero violet, deskripsi, syllabus 4-6 sesi
+- Scroll ke section utama (modul yang tutor ampuh)
+- Klik kartu modul "Introduction to AI" (atau modul pertama yang tersedia)
+- Tampilkan detail page: hero, deskripsi, syllabus
 - Scroll perlahan ke bawah memperlihatkan structure: Session 1, 2, 3, ...
 - Hover ke salah satu session — tampilkan badge "Live + Self-paced"
 
@@ -169,47 +209,78 @@ struktur tiga tingkat.
 
 ---
 
-## Chapter 5 — Modul Saya: Kelola Sesi & Bahan Ajar (45 detik)
+## Chapter 5 — Modul Saya: Kelola Sesi (50 detik)
 
-**Durasi:** 2:00–2:45
-**Word count:** ~110 kata
+**Durasi:** 2:00–2:50
+**Word count:** ~120 kata
 
 **Action sequence (Playwright):**
-- Balik ke `/tutor/modul`, klik salah satu modul yang tutor demo ampuh
-  (mis. "Modul 03: Machine Learning Dasar")
-- Klik tab "Sesi" — list session muncul
+- Balik ke `/tutor/modul`
+- Hover stat strip di atas: total siswa, pending reviews, unread threads,
+  avg completion (biarkan VO baca angkanya)
+- Klik salah satu kartu modul → masuk ke detail
+- Tab "Sesi" — list session muncul
 - Klik 1 sesi → buka detail editor
-- Highlight tombol "Tambah Materi" + "Tambah Kuis" + "Lampiran"
+- Highlight tombol "Tambah Materi" + "Tambah Kuis"
 - Hover ke status badge (draft/published)
-- Klik "Lampiran" → buka modal upload Bahan Ajar (PDF/PPT)
-- Cancel modal, balik ke list
+- Klik "Terbitkan" untuk demo state change (atau revert kalau modul live)
+- Balik ke list, perlihatkan badge berubah dari "Draft" ke "Published"
 
 **VO bahasa Indonesia:**
 
-> Di menu Modul Saya, Bapak Ibu bisa lihat semua modul yang Anda ampu.
-> Klik satu modul untuk masuk ke editor sesi. Di sini Anda bisa tambah
-> materi bacaan, sisipkan kuis di tengah pelajaran, atau lampirkan slide
-> PDF dan PowerPoint. Status "Draft" artinya siswa belum lihat —
-> aman buat eksperimen. Klik "Terbitkan" kalau materinya sudah siap
-> ditampilkan ke siswa.
+> Di menu Modul Saya, Bapak Ibu bisa lihat semua modul yang Anda ampu,
+> lengkap dengan statistik: berapa siswa yang aktif, tugas yang menunggu
+> review, dan thread diskusi yang belum dibaca. Klik salah satu modul
+> untuk masuk ke editor sesi. Di sini Anda bisa tambah materi bacaan,
+> sisipkan kuis di tengah pelajaran, dan atur urutan sesi. Status
+> "Draft" artinya siswa belum lihat — aman buat eksperimen. Klik
+> "Terbitkan" kalau materinya sudah siap.
 
 **Character expression:** Demonstrating, occasional point-down gesture.
 
 **Visual cue:**
-- Detik 2:10: cursor pulse pada tombol "Tambah Materi"
-- Detik 2:25: zoom 1.4x ke status badge "Draft" vs "Published"
+- Detik 2:10: zoom 1.3x ke stat strip (4 angka)
+- Detik 2:30: cursor pulse pada tombol "Tambah Materi"
+- Detik 2:45: zoom 1.4x ke status badge "Draft" → "Published"
 
 ---
 
-## Chapter 6 — Materi & Soal: Bikin Kuis (40 detik)
+## Chapter 6 — Bahan Ajar: File & Versioning (30 detik)
 
-**Durasi:** 2:45–3:25
+**Durasi:** 2:50–3:20
+**Word count:** ~75 kata
+
+**Action sequence (Playwright):**
+- Klik "Bahan Ajar" di sidebar → `/tutor/bahan-ajar`
+- List bahan ajar yang sudah diupload muncul (PDF/PPT cards)
+- Klik tombol "Upload Bahan Baru" → modal dengan dropzone
+- Hover salah satu kartu existing → tampilkan tombol "Versi" + "Tautkan ke Sesi"
+- Klik "Versi" → tampilkan history versioning (v1, v2, v3 dengan timestamp)
+- Close modal
+
+**VO bahasa Indonesia:**
+
+> Menu Bahan Ajar adalah pusat penyimpanan semua slide, PDF, dan handout
+> yang Anda pakai mengajar. Upload sekali, pakai berkali-kali di banyak
+> modul. Setiap kali Anda upload versi baru, sistem otomatis simpan
+> riwayatnya — jadi kalau perlu balik ke versi sebelumnya, tinggal klik.
+
+**Character expression:** Demonstrating, gesture upload (lift hand
+upward).
+
+**Visual cue:** Detik 3:05 zoom 1.4x ke version history list.
+
+---
+
+## Chapter 7 — Materi & Soal: Bikin Kuis (40 detik)
+
+**Durasi:** 3:20–4:00
 **Word count:** ~95 kata
 
 **Action sequence (Playwright):**
-- Klik menu "Materi & Soal" di sidebar → `/tutor/materi`
+- Klik "Materi & Soal" → `/tutor/materi`
 - Tampilkan list bank soal yang sudah ada
-- Klik "Buat Soal Baru"
+- Klik "Buat Soal Baru" → `/tutor/materi/baru`
 - Demo isi field: pertanyaan, 4 opsi, jawaban benar
 - Highlight dropdown "Tipe" (pretest/posttest/midsession/open_qna)
 - Klik "Simpan" — kembali ke list, soal baru muncul highlighted
@@ -224,20 +295,63 @@ struktur tiga tingkat.
 
 **Character expression:** Focused, occasional typing pantomime.
 
-**Visual cue:** Detik 3:00 zoom 1.5x ke dropdown "Tipe" memperlihatkan
+**Visual cue:** Detik 3:35 zoom 1.5x ke dropdown "Tipe" memperlihatkan
 4 opsi.
 
 ---
 
-## Chapter 7 — Siswa & Diskusi: Pantau Siswa (45 detik)
+## Chapter 8 — Review Tugas & IELTS Writing (45 detik)
 
-**Durasi:** 3:25–4:10
+**Durasi:** 4:00–4:45
+**Word count:** ~110 kata
+
+> ⚠️ Conditional: chapter ini hanya direkam kalau
+> `NEXT_PUBLIC_REVIEW_ENABLED=true`. Kalau env disable, skip chapter ini
+> dan total video jadi ~6:45.
+
+**Action sequence (Playwright):**
+
+**Phase 8A — Review Tugas umum (0-20 detik):**
+- Klik "Review Tugas" → `/tutor/review`
+- List submission menunggu review (badge "Belum dinilai")
+- Klik 1 submission → `/tutor/review/[id]`
+- Tampilkan jawaban siswa + form rubric + field feedback
+- Demo ketik feedback singkat, set skor
+
+**Phase 8B — IELTS Writing (20-45 detik):**
+- Klik "Review IELTS Writing" → `/tutor/review/writing`
+- Tampilkan list essay IELTS dari siswa
+- Klik 1 essay → tampilkan editor side-by-side (essay siswa + rubric IELTS)
+- Highlight band score selectors (Task Achievement, Coherence, Lexical
+  Resource, Grammar)
+
+**VO bahasa Indonesia:**
+
+> Setelah siswa mengumpulkan tugas atau kuis terbuka, mereka muncul di
+> menu Review Tugas — siap Bapak Ibu nilai. Klik tugas, baca jawaban
+> siswa, isi rubric, dan tulis feedback. Khusus untuk persiapan IELTS,
+> ada menu terpisah Review IELTS Writing dengan rubric resmi IELTS:
+> empat dimensi penilaian — Task Achievement, Coherence, Lexical Resource,
+> dan Grammatical Range — masing-masing dengan band score sembilan poin.
+
+**Character expression:** Attentive, occasional "checking" gesture (head
+slight tilt + hand move horizontally).
+
+**Visual cue:**
+- Detik 4:15: zoom 1.4x ke field rubric scorecard
+- Detik 4:35: zoom 1.5x ke 4 band score dimensions di IELTS form
+
+---
+
+## Chapter 9 — Siswa & Diskusi: Pantau Siswa (45 detik)
+
+**Durasi:** 4:45–5:30
 **Word count:** ~110 kata
 
 **Action sequence (Playwright):**
 - Klik "Siswa & Diskusi" → `/tutor/siswa`
 - List siswa muncul (dengan progress bar per siswa)
-- Klik siswa "Siswa Demo" (Alya Pertiwi)
+- Klik siswa "Alya Pertiwi" (`siswa.demo@asksenopati.com`)
 - Buka detail siswa `/tutor/siswa/[id]`
 - Scroll memperlihatkan section:
   1. Info biodata
@@ -260,30 +374,31 @@ struktur tiga tingkat.
 **Character expression:** Attentive, slight lean-forward.
 
 **Visual cue:**
-- Detik 3:50: zoom 1.4x ke section "Eksplorasi Karir" memperlihatkan
+- Detik 5:10: zoom 1.4x ke section "Eksplorasi Karir" memperlihatkan
   Holland Code + top match
-- Detik 4:00: cursor pulse ke tombol "Download CV PDF"
+- Detik 5:20: cursor pulse ke tombol "Download CV PDF"
 
 ---
 
-## Chapter 8 — Live Session: Schedule & Pelaksanaan (75 detik)
+## Chapter 10 — Live Session: Schedule & Pelaksanaan (75 detik)
 
-**Durasi:** 4:10–5:25
+**Durasi:** 5:30–6:45
 **Word count:** ~175 kata
 
 **Action sequence (Playwright):**
 
-**Phase 8A — Schedule (0-20 detik dari chapter):**
+**Phase 10A — Schedule (0-20 detik):**
 - Klik "Live Session" → `/tutor/live`
 - Klik "Jadwalkan Live Baru"
 - Isi form: judul "Demo Live Session", pilih modul, set tanggal+jam,
   pilih tipe "Workshop"
 - Klik "Jadwalkan" → kembali ke list, event baru muncul
 
-**Phase 8B — Pelaksanaan (20-55 detik):**
-- Klik event yang aktif → buka room presenter `/tutor/live/[id]`
+**Phase 10B — Pelaksanaan (20-55 detik):**
+- Klik event "Test Slide Sync In-Class" (yang sudah live di seed) atau
+  event yang baru saja dibuat → buka room presenter `/tutor/live/[id]`
 - Tampilkan layout: slide canvas tengah, side panel kanan, status bar atas
-- Klik "Upload Slide" → demo cepat upload PDF (atau skip ke modul yang
+- Klik "Upload Slide" → demo cepat upload PDF (atau skip ke event yang
   sudah punya slide)
 - Klik navigasi slide (next/prev)
 - Klik tombol "Push Quiz" → modal muncul, pilih kuis pretest, klik "Kirim"
@@ -291,7 +406,7 @@ struktur tiga tingkat.
 - Side panel kanan: tab Chat, ketik pesan demo "Halo semua, selamat datang"
 - Tab Q&A: tampilkan list pertanyaan dari siswa
 
-**Phase 8C — End (55-75 detik):**
+**Phase 10C — End (55-75 detik):**
 - Klik "Akhiri Sesi" → modal konfirmasi
 - Konfirmasi → recording disimpan, learning-complete event ter-trigger
 - Toast notification "Sesi berakhir, rekaman tersimpan"
@@ -314,48 +429,95 @@ struktur tiga tingkat.
 > kriteria.
 
 **Character expression:**
-- Phase 8A: explaining, scheduling gesture
-- Phase 8B: animated, more engaged, occasional point-forward
-- Phase 8C: relaxed, satisfied closing
+- Phase 10A: explaining, scheduling gesture
+- Phase 10B: animated, more engaged, occasional point-forward
+- Phase 10C: relaxed, satisfied closing
 
 **Visual cue:**
-- Detik 4:30: zoom 1.4x ke field "Tipe Sesi" memperlihatkan 3 opsi
-- Detik 4:55: zoom 1.5x ke tombol "Push Quiz" yang berkedip
-- Detik 5:10: zoom 1.3x ke side panel "Chat + Q&A"
-- Detik 5:22: fade flash putih saat "Akhiri Sesi" — transisi mood
+- Detik 5:50: zoom 1.4x ke field "Tipe Sesi" memperlihatkan 3 opsi
+- Detik 6:15: zoom 1.5x ke tombol "Push Quiz" yang berkedip
+- Detik 6:30: zoom 1.3x ke side panel "Chat + Q&A"
+- Detik 6:42: fade flash putih saat "Akhiri Sesi" — transisi mood
 
 ---
 
-## Chapter 9 — Analitik + Penutup (30 detik)
+## Chapter 11 — Cerita Interaktif (Jeda) (35 detik)
 
-**Durasi:** 5:25–5:55
-**Word count:** ~75 kata
+**Durasi:** 6:45–7:20
+**Word count:** ~85 kata
 
 **Action sequence (Playwright):**
+- Klik "Cerita Interaktif" di sidebar → `/tutor/cerita`
+- Tampilkan list cerita yang tersedia (mis. "Jeda — Persimpangan")
+- Klik salah satu cerita → editor scene
+- Tampilkan visual: scene graph (node/branch), preview scene aktif,
+  panel pilihan
+- Hover salah satu choice node → tampilkan emotion tag + next-scene route
+- Klik tombol "Preview" — tampilkan scene player di modal kecil
+
+**VO bahasa Indonesia:**
+
+> Senopati Academy juga punya fitur khas: Cerita Interaktif. Lewat menu
+> ini, Bapak Ibu bisa lihat dan kelola cerita bercabang yang membantu
+> siswa belajar dengan cara naratif — siswa membuat pilihan, dan
+> ceritanya berkembang sesuai keputusan mereka. Cocok untuk mengajar
+> empati, pengambilan keputusan, dan eksplorasi karir.
+
+**Character expression:** Curious, slight excited tone — gesture "open
+book" (palms facing up).
+
+**Visual cue:**
+- Detik 6:55: zoom 1.4x ke scene graph (branch visualization)
+- Detik 7:10: zoom 1.3x ke choice node yang sedang di-hover
+
+---
+
+## Chapter 12 — Pesan, Analitik, Profil & Penutup (40 detik)
+
+**Durasi:** 7:20–8:00
+**Word count:** ~95 kata
+
+**Action sequence (Playwright):**
+
+**Phase 12A — Pesan (0-10 detik):**
+- Klik "Pesan" di sidebar → `/pesan`
+- Tampilkan list thread DM dengan siswa
+- Hover salah satu thread (preview nama + last message)
+
+**Phase 12B — Analitik (10-20 detik):**
 - Klik "Analitik" → `/tutor/analitik`
 - Tampilkan dashboard: scorecard per siswa, completion rate per modul,
   rata-rata band score IELTS (kalau relevan)
 - Scroll, hover beberapa kartu metric
+
+**Phase 12C — Profil (20-30 detik):**
+- Klik "Profil Saya" → `/tutor/profil`
+- Tampilkan halaman profil: foto, bio, expertise, mentorSlug,
+  scorecard tutor
+- Highlight tombol "Edit Profil"
+
+**Phase 12D — Penutup (30-40 detik):**
 - Fade-out ke logo Senopati Academy dengan tagline
 
 **VO bahasa Indonesia:**
 
-> Terakhir, menu Analitik kasih Bapak Ibu gambaran besar performa siswa
-> dan modul yang Anda ampu. Pakai data ini untuk identifikasi siswa yang
-> butuh perhatian ekstra. Itu tour cepat fitur tutor Senopati Academy.
-> Kalau butuh bantuan, hubungi tim support kami di halo@asksenopati.com.
-> Selamat mengajar dan terima kasih sudah jadi bagian dari Senopati!
+> Untuk komunikasi privat dengan siswa, gunakan menu Pesan. Sementara
+> menu Analitik kasih Bapak Ibu gambaran besar performa siswa dan modul
+> yang Anda ampu. Profil Saya untuk update foto, bio, dan keahlian Anda.
+> Itu tour fitur tutor Senopati Academy. Kalau butuh bantuan, hubungi
+> tim support kami di halo@asksenopati.com. Selamat mengajar dan terima
+> kasih sudah jadi bagian dari Senopati!
 
 **Character expression:** Warm closing smile, slight wave at end.
 
 **Visual cue:**
-- Detik 5:50: fade-in logo Senopati, tagline "Mengajar lebih mudah,
+- Detik 7:50: fade-in logo Senopati, tagline "Mengajar lebih mudah,
   belajar lebih bermakna"
-- Detik 5:55: hold logo, fade to black
+- Detik 7:58: hold logo, fade to black
 
 ---
 
-## 10. Subtitle SRT — Generated Automatis
+## 13. Subtitle SRT — Generated Otomatis
 
 Saya generate `subtitle.srt` dari VO script + timestamp chapter. Format
 WebVTT-compatible, font: Inter Bold 28px, color white dengan outline 2px
@@ -363,7 +525,7 @@ hitam, position bottom margin 80px.
 
 ---
 
-## 11. Character Generation Prompts (untuk DALL-E / Midjourney / SDXL)
+## 14. Character Generation Prompts (untuk DALL-E / Midjourney / SDXL)
 
 ### Style A — Friendly Modern Teacher (Recommended)
 
@@ -413,11 +575,11 @@ lebih forgiving terhadap lipsync artifact).
   remove di compose stage pakai `rembg`
 - Resolusi minimum 768×768, ideal 1024×1024+
 
-Simpan di: `assets/character.png`
+Simpan di: `scripts/video-walkthrough/assets/character.png`
 
 ---
 
-## 12. ElevenLabs VO Setting
+## 15. ElevenLabs VO Setting
 
 **Voice yang direkomendasikan untuk bahasa Indonesia:**
 
@@ -441,13 +603,13 @@ Simpan di: `assets/character.png`
 1. Buka elevenlabs.io → Speech Synthesis
 2. Pilih voice (Antoni)
 3. Paste chapter 1 VO, generate, download → `vo/chapter-01.mp3`
-4. Ulangi untuk chapter 2-9
+4. Ulangi untuk chapter 2-12 (12 file total)
 5. Quick check: durasi tiap MP3 mendekati target chapter (±2 detik
    masih OK)
 
 ---
 
-## 13. HeyGen Lipsync Workflow
+## 16. HeyGen Lipsync Workflow
 
 **Setup awal (sekali):**
 1. Daftar di heygen.com
@@ -467,31 +629,31 @@ Simpan di: `assets/character.png`
 **Tips:**
 - Quality preset: **Standard** cukup (Premium 2× lebih lama render,
   hampir tidak ada beda visible untuk PiP 300×300)
-- Kalau ada chapter > 60 detik, split jadi 2 file (HeyGen free tier max
-  1 menit per video; Creator plan max 5 menit)
+- Kalau ada chapter > 60 detik (Chapter 10 = 75 detik), split jadi 2
+  file (HeyGen free tier max 1 menit per video; Creator plan max 5 menit)
 
 **Total estimasi pemakaian:**
-- ~10 video × 30-45 detik = ~6 menit total speaking time
+- ~13 video × 30-45 detik = ~7:30 menit total speaking time
 - Cukup pakai **Creator plan 1 bulan ($29)** atau **free trial** kalau
   tolerate watermark (saya bisa crop watermark saat compose)
 
 ---
 
-## 14. Folder Structure Final
+## 17. Folder Structure Final
 
 ```
 scripts/video-walkthrough/
-├── STORYBOARD.md                  # File ini
+├── STORYBOARD.md                  # (mirror dari docs/video-walkthrough-tutor/)
 ├── record.ts                      # Playwright recorder (saya tulis)
 ├── compose.py                     # Compositing script (saya tulis)
 ├── assets/
-│   ├── character.png              # Anda upload (dari §11)
+│   ├── character.png              # Anda upload (dari §14)
 │   ├── logo-senopati.png          # Sudah ada di repo
 │   └── intro-outro-bg.png         # Optional, saya generate
 ├── vo/
 │   ├── chapter-01.mp3             # ElevenLabs output
 │   ├── chapter-02.mp3
-│   └── ...
+│   └── ...                        # 12 files (atau 11 kalau Ch.8 di-skip)
 ├── lipsync/
 │   ├── char-01.mp4                # HeyGen output, green screen
 │   ├── char-02.mp4
@@ -500,12 +662,12 @@ scripts/video-walkthrough/
 │   └── recording.webm             # Playwright auto-output
 ├── temp/                          # Working dir untuk compose stage
 └── output/
-    └── walkthrough-tutor-2026-05-12.mp4   # Final render
+    └── walkthrough-tutor-2026-05-16.mp4   # Final render
 ```
 
 ---
 
-## 15. Estimasi Total Cost
+## 18. Estimasi Total Cost
 
 | Item | Cost | Catatan |
 |---|---|---|
@@ -517,33 +679,35 @@ scripts/video-walkthrough/
 
 ---
 
-## 16. Estimasi Timeline
+## 19. Estimasi Timeline
 
 | Stage | Saya | Anda |
 |---|---|---|
 | Storyboard review | — | 10 menit |
 | Character generation | — | 15 menit (3-5 trial di MJ/DALL-E) |
-| VO ElevenLabs | — | 30 menit (9 chapter @ ~3 menit/chapter) |
-| Playwright recorder | 1-2 jam | — |
-| HeyGen lipsync | — | 30-45 menit (queue + download) |
+| VO ElevenLabs (12 chapter) | — | 45 menit |
+| Playwright recorder | 2-3 jam | — |
+| HeyGen lipsync (12 video) | — | 45-60 menit (queue + download) |
 | Compositing script | 1-2 jam | — |
 | Render final + revisi | 30 menit | — |
-| **Total wallclock** | **~3-4 jam saya** | **~1.5-2 jam Anda** |
+| **Total wallclock** | **~4-5 jam saya** | **~2-2.5 jam Anda** |
 
 ---
 
-## 17. Open Questions sebelum mulai
+## 20. Open Questions sebelum mulai
 
-- [ ] Apakah tutor demo (demo.tutor) punya **minimal 1 modul aktif**
-      dengan sesi published untuk demo? (Saya akan cek)
-- [ ] Apakah ada **live event aktif** yang bisa di-demo, atau saya buat
-      seed event baru?
+- [ ] Konfirmasi: rekam dengan `NEXT_PUBLIC_REVIEW_ENABLED=true` (sertakan
+      Chapter 8) atau tanpa (skip Chapter 8 → durasi 6:45)?
+- [ ] Pakai event existing `"Test Slide Sync In-Class"` untuk Chapter 10
+      Phase B, atau saya bikin seed event baru bertema "Demo Walkthrough"?
 - [ ] Apakah Anda mau **background music**? Kalau ya, saya cari track
       royalty-free di Pixabay/YouTube Audio Library.
 - [ ] Final video di-upload ke mana? YouTube, Drive, atau langsung di
       `asksenopati.com/onboarding-tutor`?
+- [ ] Untuk Chapter 11 (Cerita Interaktif): demo cerita Jeda yang sudah
+      ada di seed, atau cerita lain?
 
 ---
 
-*Draft: 2026-05-12. Review lalu kasih tahu kalau ada chapter yang mau
-diubah/tambah sebelum saya mulai Playwright + compose script.*
+*Draft revisi: 2026-05-16. Review lalu kasih tahu kalau ada chapter yang
+mau diubah/tambah sebelum saya mulai Playwright + compose script.*
