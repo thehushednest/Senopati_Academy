@@ -1,7 +1,11 @@
 # Storyboard — Video Walkthrough Tutor Senopati Academy
 
-Target: **~7:30 menit MP4 1080p**, dual-layer (screen capture + character PiP),
-audience tutor baru / tutor onboarding.
+Target: **~8:00 menit MP4 1080p**, dual-layer (screen capture + character PiP),
+audience tutor baru / tutor onboarding. Pemandu virtual: **Elsya**.
+
+**Revisi 2026-05-16 (rev-2):** Chapter 1 diperpanjang (15 → 30 detik) untuk
+perkenalan Elsya sebagai pemandu virtual. Cascade: timeline chapter 2-12
+geser +15 detik.
 
 **Revisi 2026-05-16:** Diperluas dari 9 → 12 chapter agar mencakup seluruh
 menu sidebar tutor (Review Tugas/IELTS, Cerita Interaktif/Jeda, Pesan, Profil
@@ -56,7 +60,7 @@ npm run dev
 | Audio | 48kHz stereo, AAC 192kbps |
 | Codec video | H.264 high profile |
 | Container | MP4 |
-| Durasi target | 7:00 — 7:45 menit |
+| Durasi target | 7:45 — 8:15 menit |
 | Background music | Optional — instrumental ringan, -24 dB di bawah VO |
 
 **Layout dual-layer:**
@@ -85,34 +89,47 @@ HeyGen green screen → transparent.
 
 ---
 
-## Chapter 1 — Pembuka (15 detik)
+## Chapter 1 — Pembuka & Perkenalan Elsya (30 detik)
 
-**Durasi:** 0:00–0:15
+**Durasi:** 0:00–0:30
 **Mood:** Hangat, ramah, semangat
-**Word count:** ~35 kata
+**Word count:** ~78 kata
 
 **Action sequence (Playwright):**
-- Tampilkan logo Senopati Academy fullscreen dengan fade-in 1s
-- Logo zoom-out, transisi ke landing page `https://asksenopati.com`
-- Cursor hover sebentar di tombol "Masuk"
+- Tampilkan logo Senopati Academy fullscreen dengan fade-in 1s (0:00–0:03)
+- Logo zoom-out, transisi ke landing page `https://asksenopati.com` (0:03–0:08)
+- Hold landing page sambil Elsya memperkenalkan diri di PiP (0:08–0:22)
+- Cursor hover sebentar di tombol "Masuk" (0:22–0:30)
 
 **VO bahasa Indonesia:**
 
-> Halo, Bapak dan Ibu Tutor! Selamat datang di Senopati Academy. Saya akan
-> menemani Bapak Ibu mengenal fitur-fitur platform yang akan jadi teman
-> mengajar sehari-hari. Yuk, kita mulai!
+> Halo, Bapak dan Ibu Tutor! Selamat datang di Senopati Academy.
+> Perkenalkan, saya Elsya, pemandu virtual Bapak Ibu hari ini. Saya akan
+> menemani Anda berkeliling Senopati Academy, mengenal fitur-fitur penting
+> yang akan jadi teman mengajar sehari-hari — dari dashboard tutor,
+> mengelola modul Paham AI, hingga memimpin live session yang seru.
+> Tenang, saya pelan-pelan saja kok. Yuk, kita mulai perjalanannya!
 
-**Character expression:** Smiling, slight wave (prompt HeyGen "warm
-welcoming smile, slight head tilt").
+**Character expression:**
+- 0:00–0:08: warm welcoming smile, slight wave dengan tangan kanan
+- 0:08–0:12: hand-to-chest gesture saat menyebut "saya Elsya"
+- 0:12–0:25: explaining gesture, tangan terbuka, sesekali angguk
+- 0:25–0:30: smile + slight forward lean saat "Yuk, kita mulai perjalanannya"
 
-**Visual cue:** Title card kecil di tengah "Walkthrough Tutor — Senopati
-Academy" yang fade out di detik 4-5.
+**Visual cue:**
+- Detik 0:08: title card "Walkthrough Tutor — Senopati Academy"
+  fade-in di tengah
+- Detik 0:10: subtitle kecil "Bersama Elsya, Pemandu Virtual Anda"
+  muncul di bawah title card
+- Detik 0:18: title card fade-out (hold ~8 detik supaya pembaca sempat baca)
+- Detik 0:25: cursor pulse subtle di tombol "Masuk" sebagai cue untuk
+  Chapter 2
 
 ---
 
 ## Chapter 2 — Login & Dashboard Tutor (30 detik)
 
-**Durasi:** 0:15–0:45
+**Durasi:** 0:30–1:00
 **Word count:** ~75 kata
 
 **Action sequence (Playwright):**
@@ -136,13 +153,13 @@ Academy" yang fade out di detik 4-5.
 nod tiap kalimat baru).
 
 **Visual cue:** Zoom-in 1.2x ke kartu modul aktif saat VO mention "modul
-yang aktif" (detik 0:25-0:30). Zoom-out balik normal di akhir chapter.
+yang aktif" (detik 0:40-0:45). Zoom-out balik normal di akhir chapter.
 
 ---
 
 ## Chapter 3 — Tour Sidebar Navigation (30 detik)
 
-**Durasi:** 0:45–1:15
+**Durasi:** 1:00–1:30
 **Word count:** ~70 kata
 
 **Action sequence (Playwright):**
@@ -179,7 +196,7 @@ sedang di-hover, sync dengan VO.
 
 ## Chapter 4 — Program Paham AI Overview (45 detik)
 
-**Durasi:** 1:15–2:00
+**Durasi:** 1:30–2:15
 **Word count:** ~110 kata
 
 **Action sequence (Playwright):**
@@ -203,15 +220,15 @@ sedang di-hover, sync dengan VO.
 struktur tiga tingkat.
 
 **Visual cue:**
-- Detik 1:20: zoom 1.3x ke badge "Modul 01-22" di kartu modul
-- Detik 1:45: zoom 1.5x ke section "Syllabus" memperlihatkan struktur
+- Detik 1:35: zoom 1.3x ke badge "Modul 01-22" di kartu modul
+- Detik 2:00: zoom 1.5x ke section "Syllabus" memperlihatkan struktur
   per-sesi
 
 ---
 
 ## Chapter 5 — Modul Saya: Kelola Sesi (50 detik)
 
-**Durasi:** 2:00–2:50
+**Durasi:** 2:15–3:05
 **Word count:** ~120 kata
 
 **Action sequence (Playwright):**
@@ -239,15 +256,15 @@ struktur tiga tingkat.
 **Character expression:** Demonstrating, occasional point-down gesture.
 
 **Visual cue:**
-- Detik 2:10: zoom 1.3x ke stat strip (4 angka)
-- Detik 2:30: cursor pulse pada tombol "Tambah Materi"
-- Detik 2:45: zoom 1.4x ke status badge "Draft" → "Published"
+- Detik 2:25: zoom 1.3x ke stat strip (4 angka)
+- Detik 2:45: cursor pulse pada tombol "Tambah Materi"
+- Detik 3:00: zoom 1.4x ke status badge "Draft" → "Published"
 
 ---
 
 ## Chapter 6 — Bahan Ajar: File & Versioning (30 detik)
 
-**Durasi:** 2:50–3:20
+**Durasi:** 3:05–3:35
 **Word count:** ~75 kata
 
 **Action sequence (Playwright):**
@@ -268,13 +285,13 @@ struktur tiga tingkat.
 **Character expression:** Demonstrating, gesture upload (lift hand
 upward).
 
-**Visual cue:** Detik 3:05 zoom 1.4x ke version history list.
+**Visual cue:** Detik 3:20 zoom 1.4x ke version history list.
 
 ---
 
 ## Chapter 7 — Materi & Soal: Bikin Kuis (40 detik)
 
-**Durasi:** 3:20–4:00
+**Durasi:** 3:35–4:15
 **Word count:** ~95 kata
 
 **Action sequence (Playwright):**
@@ -295,14 +312,14 @@ upward).
 
 **Character expression:** Focused, occasional typing pantomime.
 
-**Visual cue:** Detik 3:35 zoom 1.5x ke dropdown "Tipe" memperlihatkan
+**Visual cue:** Detik 3:50 zoom 1.5x ke dropdown "Tipe" memperlihatkan
 4 opsi.
 
 ---
 
 ## Chapter 8 — Review Tugas & IELTS Writing (45 detik)
 
-**Durasi:** 4:00–4:45
+**Durasi:** 4:15–5:00
 **Word count:** ~110 kata
 
 > ⚠️ Conditional: chapter ini hanya direkam kalau
@@ -338,14 +355,14 @@ upward).
 slight tilt + hand move horizontally).
 
 **Visual cue:**
-- Detik 4:15: zoom 1.4x ke field rubric scorecard
-- Detik 4:35: zoom 1.5x ke 4 band score dimensions di IELTS form
+- Detik 4:30: zoom 1.4x ke field rubric scorecard
+- Detik 4:50: zoom 1.5x ke 4 band score dimensions di IELTS form
 
 ---
 
 ## Chapter 9 — Siswa & Diskusi: Pantau Siswa (45 detik)
 
-**Durasi:** 4:45–5:30
+**Durasi:** 5:00–5:45
 **Word count:** ~110 kata
 
 **Action sequence (Playwright):**
@@ -374,15 +391,15 @@ slight tilt + hand move horizontally).
 **Character expression:** Attentive, slight lean-forward.
 
 **Visual cue:**
-- Detik 5:10: zoom 1.4x ke section "Eksplorasi Karir" memperlihatkan
+- Detik 5:25: zoom 1.4x ke section "Eksplorasi Karir" memperlihatkan
   Holland Code + top match
-- Detik 5:20: cursor pulse ke tombol "Download CV PDF"
+- Detik 5:35: cursor pulse ke tombol "Download CV PDF"
 
 ---
 
 ## Chapter 10 — Live Session: Schedule & Pelaksanaan (75 detik)
 
-**Durasi:** 5:30–6:45
+**Durasi:** 5:45–7:00
 **Word count:** ~175 kata
 
 **Action sequence (Playwright):**
@@ -434,16 +451,16 @@ slight tilt + hand move horizontally).
 - Phase 10C: relaxed, satisfied closing
 
 **Visual cue:**
-- Detik 5:50: zoom 1.4x ke field "Tipe Sesi" memperlihatkan 3 opsi
-- Detik 6:15: zoom 1.5x ke tombol "Push Quiz" yang berkedip
-- Detik 6:30: zoom 1.3x ke side panel "Chat + Q&A"
-- Detik 6:42: fade flash putih saat "Akhiri Sesi" — transisi mood
+- Detik 6:05: zoom 1.4x ke field "Tipe Sesi" memperlihatkan 3 opsi
+- Detik 6:30: zoom 1.5x ke tombol "Push Quiz" yang berkedip
+- Detik 6:45: zoom 1.3x ke side panel "Chat + Q&A"
+- Detik 6:57: fade flash putih saat "Akhiri Sesi" — transisi mood
 
 ---
 
 ## Chapter 11 — Cerita Interaktif (Jeda) (35 detik)
 
-**Durasi:** 6:45–7:20
+**Durasi:** 7:00–7:35
 **Word count:** ~85 kata
 
 **Action sequence (Playwright):**
@@ -467,14 +484,14 @@ slight tilt + hand move horizontally).
 book" (palms facing up).
 
 **Visual cue:**
-- Detik 6:55: zoom 1.4x ke scene graph (branch visualization)
-- Detik 7:10: zoom 1.3x ke choice node yang sedang di-hover
+- Detik 7:10: zoom 1.4x ke scene graph (branch visualization)
+- Detik 7:25: zoom 1.3x ke choice node yang sedang di-hover
 
 ---
 
 ## Chapter 12 — Pesan, Analitik, Profil & Penutup (40 detik)
 
-**Durasi:** 7:20–8:00
+**Durasi:** 7:35–8:15
 **Word count:** ~95 kata
 
 **Action sequence (Playwright):**
@@ -511,9 +528,9 @@ book" (palms facing up).
 **Character expression:** Warm closing smile, slight wave at end.
 
 **Visual cue:**
-- Detik 7:50: fade-in logo Senopati, tagline "Mengajar lebih mudah,
+- Detik 8:05: fade-in logo Senopati, tagline "Mengajar lebih mudah,
   belajar lebih bermakna"
-- Detik 7:58: hold logo, fade to black
+- Detik 8:13: hold logo, fade to black
 
 ---
 
@@ -527,41 +544,49 @@ hitam, position bottom margin 80px.
 
 ## 14. Character Generation Prompts (untuk DALL-E / Midjourney / SDXL)
 
+> **Catatan persona:** Karakter ini muncul sebagai **Elsya**, pemandu
+> virtual perempuan. Karena namanya feminin, sesuaikan prompt: ganti
+> "young teacher" jadi "young female teacher / female educator" dan
+> sebutkan rambut sebahu atau panjang yang dirapikan, tanpa beard
+> (relevan untuk Style C). Style A & B di bawah saya update agar
+> default-nya female; kalau Anda mau opsi laki-laki, tinggal swap
+> kata kunci "female" → "male" di prompt.
+
 ### Style A — Friendly Modern Teacher (Recommended)
 
 ```
-Friendly Indonesian young teacher character, 28 years old, warm smile,
-wearing smart casual outfit: teal blazer (color #18C29C) over white shirt,
-short black hair neatly styled, kind expressive eyes, medium shot from
-chest up, slight three-quarter angle, looking at camera, clean studio
-lighting, neutral cream background (or transparent PNG), digital
-illustration style with subtle gradient shading, approachable and
-professional, suitable for educational mascot. High detail face, clear
-mouth area for lipsync. 1024x1024, centered composition.
+Friendly Indonesian young female teacher character named Elsya, 26 years
+old, warm smile, wearing smart casual outfit: teal blazer (color #18C29C)
+over white blouse, shoulder-length neat black hair, kind expressive eyes,
+medium shot from chest up, slight three-quarter angle, looking at camera,
+clean studio lighting, neutral cream background (or transparent PNG),
+digital illustration style with subtle gradient shading, approachable
+and professional, suitable for educational mascot. High detail face,
+clear mouth area for lipsync. 1024x1024, centered composition.
 ```
 
 ### Style B — Anime / Pixar Stylized
 
 ```
-Pixar-style 3D character of a young Indonesian teacher, warm friendly
-smile, wearing a teal hoodie (#18C29C) with Senopati Academy logo,
-slight tan skin tone, expressive dark eyes, neat short hair, medium
-shot from chest up, looking forward, soft cinematic lighting, isolated
-on solid green chromakey background (#00b140), 3D render highly
-polished, cute and approachable, designed for educational content.
-1024x1024.
+Pixar-style 3D character of a young Indonesian female teacher named
+Elsya, warm friendly smile, wearing a teal blazer (#18C29C) with
+Senopati Academy logo pin, slight tan skin tone, expressive dark eyes,
+shoulder-length neat black hair, medium shot from chest up, looking
+forward, soft cinematic lighting, isolated on solid green chromakey
+background (#00b140), 3D render highly polished, cute and approachable,
+designed for educational content. 1024x1024.
 ```
 
 ### Style C — Flat Illustration / Cartoon
 
 ```
-Flat vector illustration of an Indonesian teacher character, modern
-geometric style, friendly smile, simple shapes, teal color palette
-(#18C29C primary, #0f9d7c secondary), wearing collared shirt, slight
-beard or no beard, short hair, medium shot bust portrait, clean white
-or transparent background, design for animated mascot use, large clear
-mouth and eyes for animation, behance / dribbble quality,
-1024x1024 PNG.
+Flat vector illustration of an Indonesian female teacher character
+named Elsya, modern geometric style, friendly smile, simple shapes,
+teal color palette (#18C29C primary, #0f9d7c secondary), wearing
+collared blouse or blazer, shoulder-length hair, medium shot bust
+portrait, clean white or transparent background, design for animated
+mascot use, large clear mouth and eyes for animation, behance /
+dribbble quality, 1024x1024 PNG.
 ```
 
 **Rekomendasi:** Style A untuk feel paling profesional. Style B kalau
@@ -581,14 +606,15 @@ Simpan di: `scripts/video-walkthrough/assets/character.png`
 
 ## 15. ElevenLabs VO Setting
 
-**Voice yang direkomendasikan untuk bahasa Indonesia:**
+**Voice yang direkomendasikan untuk bahasa Indonesia** (Elsya = persona
+perempuan, jadi default ke voice wanita):
 
 | Voice | Karakter | Use case |
 |---|---|---|
-| **Antoni** (multilingual) | Pria muda, hangat, jelas | Recommended utama |
-| **Bill** | Pria dewasa, professional | Kalau mau tone lebih senior |
-| **Charlotte** | Wanita muda, friendly | Kalau prefer voice wanita |
+| **Charlotte** (multilingual) | Wanita muda, hangat, friendly | Recommended utama — match Elsya |
+| **Sarah** (multilingual) | Wanita muda, soft, clear | Alternatif Charlotte |
 | **Custom clone** | Voice Anda sendiri | Kalau punya budget + waktu setup |
+| **Antoni** / **Bill** | Pria muda / dewasa | Kalau ingin swap persona ke karakter laki-laki |
 
 **Setting:**
 - Stability: **45%** (cukup variasi untuk natural, tidak monoton)
@@ -601,7 +627,7 @@ Simpan di: `scripts/video-walkthrough/assets/character.png`
 
 **Workflow:**
 1. Buka elevenlabs.io → Speech Synthesis
-2. Pilih voice (Antoni)
+2. Pilih voice (Charlotte)
 3. Paste chapter 1 VO, generate, download → `vo/chapter-01.mp3`
 4. Ulangi untuk chapter 2-12 (12 file total)
 5. Quick check: durasi tiap MP3 mendekati target chapter (±2 detik
@@ -614,12 +640,12 @@ Simpan di: `scripts/video-walkthrough/assets/character.png`
 **Setup awal (sekali):**
 1. Daftar di heygen.com
 2. Tab "Avatars" → "Upload Photo" → upload character.png
-3. Set name "Tutor Senopati"
+3. Set name "Elsya — Pemandu Senopati"
 4. Tunggu HeyGen training avatar (~2-5 menit)
 
 **Per chapter:**
 1. Klik "Create Video" → "Avatar Video"
-2. Pilih avatar "Tutor Senopati"
+2. Pilih avatar "Elsya — Pemandu Senopati"
 3. Background: **Green Screen** (#00b140) — penting untuk chroma key
 4. Aspect ratio: 1:1 (square — saya crop nanti)
 5. Source audio: **Upload File** → pilih `vo/chapter-XX.mp3`
