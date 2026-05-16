@@ -136,18 +136,22 @@ HeyGen green screen → transparent.
 - Klik tombol "Masuk" → navigasi ke `/login`
 - Type email `tutor.demo@asksenopati.com` (slow typing animation 80wpm)
 - Type password (masked)
-- Klik "Masuk" → redirect ke `/tutor` (dashboard)
+- Klik "Masuk" → redirect ke `/tutor` (dashboard) — render
+  `TutorDashboard.tsx` (bukan `/dashboard` siswa)
 - Pause 2 detik — biarkan VO mention bagian dashboard
-- Cursor hover ke kartu "Modul aktif" (top), lalu ke "Thread terbaru"
+- Cursor hover ke section "Modul yang Banyak Dipelajari" (kartu top)
+- Hover ke widget "Diskusi Terbaru" dengan dot merah indicator unread
 - Hover ke greeting card di pojok kanan atas dengan nama "Pak Reza Demo"
 
 **VO bahasa Indonesia:**
 
 > Login dengan akun tutor Anda menggunakan email dan kata sandi yang
 > diberikan tim Senopati. Setelah masuk, Bapak Ibu akan langsung tiba di
-> dashboard tutor. Di sini ada ringkasan tugas hari ini: modul yang aktif,
-> diskusi terbaru dari siswa, dan jadwal live session yang akan datang.
-> Semua dirancang biar Bapak Ibu langsung tahu apa yang harus dikerjakan.
+> dashboard tutor. Di sini ada ringkasan tugas hari ini: modul yang paling
+> aktif dipelajari beserta statistiknya, dan thread diskusi terbaru dari
+> siswa yang menunggu balasan. Untuk jadwal live session, ada menu khusus
+> di sebelah kiri yang akan kita kunjungi nanti. Semuanya dirancang biar
+> Bapak Ibu langsung tahu siapa yang butuh perhatian.
 
 **Character expression:** Explaining, hand gesture pointing right (subtle
 nod tiap kalimat baru).
@@ -240,94 +244,137 @@ Slight nod tiap nama modul disebut.
 
 ---
 
-## Chapter 5 — Modul Saya: Kelola Sesi (50 detik)
+## Chapter 5 — Modul Saya: Pantau Modul yang Anda Ampu (50 detik)
 
 **Durasi:** 2:15–3:05
-**Word count:** ~120 kata
+**Word count:** ~125 kata
+
+> ℹ️ **Design note:** Tutor di Senopati = **monitor & mentor, bukan
+> content editor** (by design). Halaman `/tutor/modul` adalah read-only
+> insight, bukan editor. Konten dikurasi tim pusat. Lihat
+> `senopati-tutor-role` di memory.
 
 **Action sequence (Playwright):**
-- Balik ke `/tutor/modul`
-- Hover stat strip di atas: total siswa, pending reviews, unread threads,
-  avg completion (biarkan VO baca angkanya)
-- Klik salah satu kartu modul → masuk ke detail
-- Tab "Sesi" — list session muncul
-- Klik 1 sesi → buka detail editor
-- Highlight tombol "Tambah Materi" + "Tambah Kuis"
-- Hover ke status badge (draft/published)
-- Klik "Terbitkan" untuk demo state change (atau revert kalau modul live)
-- Balik ke list, perlihatkan badge berubah dari "Draft" ke "Published"
+- Navigasi ke `/tutor/modul`
+- Hover stat strip di atas: **Total Modul, Siswa Aktif, Pending Review,
+  Avg Completion** (biarkan VO baca angkanya)
+- Klik salah satu kartu modul → masuk ke detail siswa per sesi
+- Scroll memperlihatkan: list siswa dengan progress per sesi, thread
+  diskusi yang muncul di modul itu, tugas yang sudah masuk
+- Hover ke tombol "Lihat Diskusi" / "Review Tugas" (CTA navigasi, bukan
+  editor)
+- Tidak ada step "tambah materi / publish" — fitur itu memang tidak
+  tersedia di sisi tutor
 
 **VO bahasa Indonesia:**
 
 > Di menu Modul Saya, Bapak Ibu bisa lihat semua modul yang Anda ampu,
-> lengkap dengan statistik: berapa siswa yang aktif, tugas yang menunggu
-> review, dan thread diskusi yang belum dibaca. Klik salah satu modul
-> untuk masuk ke editor sesi. Di sini Anda bisa tambah materi bacaan,
-> sisipkan kuis di tengah pelajaran, dan atur urutan sesi. Status
-> "Draft" artinya siswa belum lihat — aman buat eksperimen. Klik
-> "Terbitkan" kalau materinya sudah siap.
+> lengkap dengan statistik di bagian atas: total modul, siswa yang aktif,
+> tugas yang menunggu review, dan rata-rata penyelesaian siswa. Klik
+> salah satu modul untuk masuk ke detail — Anda dapat lihat siapa saja
+> siswa yang sedang mengerjakan modul itu, progress mereka per sesi,
+> thread diskusi yang muncul, dan tugas yang sudah masuk. Konten modul
+> — materi bacaan, kuis, urutan sesi — dikurasi oleh tim pusat Senopati,
+> jadi Bapak Ibu bisa fokus mengajar dan mendampingi tanpa harus pusing
+> soal pengelolaan konten. Kalau Anda menemukan kebutuhan materi baru
+> saat mengajar, ada menu khusus untuk submit usulan ke tim kurasi yang
+> akan kita lihat di chapter berikutnya.
 
-**Character expression:** Demonstrating, occasional point-down gesture.
+**Character expression:** Reassuring, slight nod saat menyebut "tim pusat
+yang kurasi". Hand gesture "rilis" (palms open relaxed) saat "fokus
+mengajar dan mendampingi".
 
 **Visual cue:**
 - Detik 2:25: zoom 1.3x ke stat strip (4 angka)
-- Detik 2:45: cursor pulse pada tombol "Tambah Materi"
-- Detik 3:00: zoom 1.4x ke status badge "Draft" → "Published"
+- Detik 2:45: zoom 1.4x ke detail siswa per sesi memperlihatkan progress
+  individual
+- Detik 3:00: subtle highlight teal pada link "Pesan tim kurasi" atau
+  CTA navigasi ke /tutor/materi/baru (segue ke Ch.6/7)
 
 ---
 
-## Chapter 6 — Bahan Ajar: File & Versioning (30 detik)
+## Chapter 6 — Bahan Ajar: Library Kurasi Tim Pusat (30 detik)
 
 **Durasi:** 3:05–3:35
-**Word count:** ~75 kata
+**Word count:** ~80 kata
+
+> ℹ️ **Design note:** Tutor **download only**, tidak upload. Upload &
+> versioning dilakukan tim kurasi via `/admin/bahan-ajar`. Page
+> `/tutor/bahan-ajar` line 106 secara eksplisit tulis "Belum ada bahan
+> ajar yang di-upload **admin**".
 
 **Action sequence (Playwright):**
 - Klik "Bahan Ajar" di sidebar → `/tutor/bahan-ajar`
-- List bahan ajar yang sudah diupload muncul (PDF/PPT cards)
-- Klik tombol "Upload Bahan Baru" → modal dengan dropzone
-- Hover salah satu kartu existing → tampilkan tombol "Versi" + "Tautkan ke Sesi"
-- Klik "Versi" → tampilkan history versioning (v1, v2, v3 dengan timestamp)
-- Close modal
+- List bahan ajar (PDF/DOCX cards) yang dikelompokkan per modul muncul
+- Hover ke salah satu kartu — tampilkan badge tipe (PDF/DOCX) + size
+- Hover ke tombol **"Download"** (CTA utama, bukan "Upload Baru")
+- Tidak ada step upload — fitur itu memang tidak tersedia di sisi tutor
 
 **VO bahasa Indonesia:**
 
-> Menu Bahan Ajar adalah pusat penyimpanan semua slide, PDF, dan handout
-> yang Anda pakai mengajar. Upload sekali, pakai berkali-kali di banyak
-> modul. Setiap kali Anda upload versi baru, sistem otomatis simpan
-> riwayatnya — jadi kalau perlu balik ke versi sebelumnya, tinggal klik.
+> Menu Bahan Ajar adalah library slide, PDF, dan handout yang sudah
+> disiapkan tim kurasi Senopati untuk modul yang Bapak Ibu ampu. Tinggal
+> download yang Anda perlukan untuk persiapan live session — semua sudah
+> konsisten dengan kurikulum resmi. Kalau Bapak Ibu menemukan ada slide
+> atau handout yang menurut Anda perlu di-update atau ditambah
+> berdasarkan pengalaman mengajar, kabari tim kurasi lewat
+> halo@asksenopati.com — mereka yang akan upload versi baru dan kelola
+> versioning-nya.
 
-**Character expression:** Demonstrating, gesture upload (lift hand
-upward).
+**Character expression:** Calm, gesture "menerima" (open hand menjemput
+ke arah dada) saat menyebut "tinggal download". Slight head tilt saat
+menyebut email kurasi.
 
-**Visual cue:** Detik 3:20 zoom 1.4x ke version history list.
+**Visual cue:**
+- Detik 3:15: zoom 1.3x ke salah satu kartu bahan ajar memperlihatkan
+  badge "PDF" + size + tombol Download
+- Detik 3:25: subtle highlight teal di kalimat "halo@asksenopati.com"
+  yang muncul sebagai overlay text
 
 ---
 
-## Chapter 7 — Materi & Soal: Bikin Kuis (40 detik)
+## Chapter 7 — Materi & Soal: Usulan Materi ke Kurasi (40 detik)
 
 **Durasi:** 3:35–4:15
-**Word count:** ~95 kata
+**Word count:** ~100 kata
+
+> ℹ️ **Design note:** `/tutor/materi/baru` adalah `UsulanMateriForm` —
+> tutor **submit usulan ke tim kurasi**, bukan create soal langsung.
+> Tim kurasi yang menulis, review, dan publish soal aktif. Mirror
+> dari Ch.6 — by design, bukan roadmap.
 
 **Action sequence (Playwright):**
 - Klik "Materi & Soal" → `/tutor/materi`
-- Tampilkan list bank soal yang sudah ada
-- Klik "Buat Soal Baru" → `/tutor/materi/baru`
-- Demo isi field: pertanyaan, 4 opsi, jawaban benar
-- Highlight dropdown "Tipe" (pretest/posttest/midsession/open_qna)
-- Klik "Simpan" — kembali ke list, soal baru muncul highlighted
+- Tampilkan list bank soal yang sudah ada untuk modul yang tutor ampu
+- Hover salah satu kartu soal → tampilkan tipe (Pretest/Posttest) +
+  modul yang dipakai
+- Klik tombol **"Tambah Materi"** → `/tutor/materi/baru` (form Usulan
+  Materi Baru — title metadata explicit "Usulan Materi Baru · Tutor")
+- Tampilkan form `UsulanMateriForm` dengan field: konteks, usulan soal,
+  alasan
+- Hover tombol "Kirim Usulan" — tidak diklik, demo only
 
 **VO bahasa Indonesia:**
 
-> Untuk membuat kuis, masuk ke menu Materi dan Soal. Bapak Ibu bisa bikin
-> soal pilihan ganda, isian singkat, atau pertanyaan terbuka. Soal
-> dikelompokkan berdasarkan tipe: Pretest untuk cek pengetahuan awal,
-> Posttest untuk evaluasi akhir, dan Open Q-and-A untuk diskusi live.
-> Soal yang Anda buat bisa dipakai ulang di banyak modul.
+> Menu Materi dan Soal adalah tempat Bapak Ibu lihat bank soal yang sudah
+> tersedia untuk modul Anda — pretest untuk cek pengetahuan awal siswa,
+> posttest untuk evaluasi akhir, dan kuis di tengah sesi yang dipakai
+> live. Soal-soal ini dikurasi oleh tim Senopati supaya konsisten di
+> seluruh angkatan Paham AI. Kalau Bapak Ibu menemukan kebutuhan soal
+> baru saat mengajar — misalnya konteks lokal yang belum tercover atau
+> topik yang sering bikin siswa bingung — klik tombol Tambah Materi
+> untuk submit usulan. Tim kurasi yang akan menulis, review, dan publish
+> jadi soal aktif.
 
-**Character expression:** Focused, occasional typing pantomime.
+**Character expression:** Engaged, gesture "memberi" (palm-up sweep ke
+depan) saat menyebut "submit usulan". Smile saat "konteks lokal" —
+indicate tutor knowledge is valued.
 
-**Visual cue:** Detik 3:50 zoom 1.5x ke dropdown "Tipe" memperlihatkan
-4 opsi.
+**Visual cue:**
+- Detik 3:50: zoom 1.3x ke kartu soal Pretest/Posttest memperlihatkan
+  tipe + modul mapping
+- Detik 4:05: zoom 1.4x ke form Usulan Materi field "konteks" + "usulan
+  soal"
 
 ---
 
@@ -381,26 +428,36 @@ slight tilt + hand move horizontally).
 
 **Action sequence (Playwright):**
 - Klik "Siswa & Diskusi" → `/tutor/siswa`
-- List siswa muncul (dengan progress bar per siswa)
+- List siswa muncul dengan tier badge (Unggulan / Aktif / Berkembang /
+  Memulai) — bukan tab Diskusi terpisah
 - Klik siswa "Alya Pertiwi" (`siswa.demo@asksenopati.com`)
-- Buka detail siswa `/tutor/siswa/[id]`
-- Scroll memperlihatkan section:
-  1. Info biodata
-  2. Scorecard 4-dimensi
-  3. **Eksplorasi Karir** — RIASEC profile + CV summary + lamaran
-  4. Riwayat modul completed
-- Hover tombol "Download CV PDF"
-- Scroll balik ke atas, klik tab "Diskusi"
-- Tampilkan thread diskusi terbuka
+- Buka detail siswa `/tutor/siswa/[id]` (single-scroll layout, **bukan
+  tabbed**)
+- Scroll memperlihatkan section berurutan:
+  1. Header: foto, scorecard `total/100` + tier label
+  2. **Breakdown 5 Kategori** — Pemahaman Akademik, Penyelesaian Modul,
+     Konsistensi, Sesi Live, Kontribusi Komunitas
+  3. Tugas Terbaru periode ini (submission list)
+  4. Live Session periode ini (RSVP + attendance)
+  5. **Modul Interaktif (Jeda)** — narrativePlaythroughs dengan
+     finalSaldo, kewaspadaan, hubungan, badge
+  6. Riwayat Pengajaran (myTeachings + otherTeachings)
+  7. `StudentCareerSection` — **RIASEC + CV Builder + Tracker Lamaran**
+- Scroll ke section StudentCareerSection
+- Hover tombol "⬇ Download CV PDF" (CTA yang ADA, untuk download CV
+  ATS-friendly)
 
 **VO bahasa Indonesia:**
 
-> Di menu Siswa, Anda lihat semua siswa yang Bapak Ibu bimbing. Klik
-> nama siswa untuk masuk ke profil lengkap. Di sini Anda dapat data
-> rapi: scorecard pemahaman akademik, hasil RIASEC untuk eksplorasi
-> karir, ringkasan CV, dan riwayat lamaran kerja kalau siswa sudah mulai
-> melamar. Anda juga bisa download CV mereka langsung untuk review.
-> Di tab Diskusi, balas thread siswa secara personal.
+> Di menu Siswa, Anda lihat semua siswa yang Bapak Ibu bimbing beserta
+> tier scorecard mereka — Pelajar Unggulan, Aktif, Berkembang, atau
+> Sedang Memulai. Klik nama siswa untuk profil lengkap: breakdown lima
+> kategori scorecard, riwayat modul interaktif Jeda yang siswa mainkan,
+> tugas-tugas terbaru, hasil RIASEC untuk eksplorasi karir, ringkasan CV,
+> dan tracker lamaran kerja kalau siswa sudah mulai melamar. Anda juga
+> bisa download CV mereka langsung untuk feedback. Untuk komunikasi
+> privat sama siswa, ada menu Pesan yang akan kita bahas di akhir tour
+> ini.
 
 **Character expression:** Attentive, slight lean-forward.
 
@@ -411,53 +468,79 @@ slight tilt + hand move horizontally).
 
 ---
 
-## Chapter 10 — Live Session: Schedule & Pelaksanaan (75 detik)
+## Chapter 10 — Live Session: Schedule, Presenter Room, End Session (75 detik)
 
 **Durasi:** 5:45–7:00
-**Word count:** ~175 kata
+**Word count:** ~180 kata
+
+> ℹ️ **Route note:** Presenter room (slide, chat, push quiz, akhiri sesi)
+> sebenarnya di **`/live-session/[id]/room`** — bukan `/tutor/live/[id]`.
+> Halaman `/tutor/live/[id]` adalah **post-event management**
+> (attendance + assignment grading).
+>
+> ℹ️ **Schema note:** `LiveEvent` **tidak punya field tipe sesi**
+> (Workshop/Reguler/QnA). Field yang ada: title, description, moduleSlug,
+> scheduledAt, durationMinutes, meetingUrl, maxParticipants, joinCode
+> (6-digit auto-generated).
+>
+> ℹ️ **Sertifikat note:** Auto-issue triggered oleh **lulus posttest
+> `course_post` quiz** ([course-quiz/submit:171](src/app/api/student/course-quiz/[id]/submit/route.ts#L171)),
+> BUKAN dari "Akhiri Sesi". End-session trigger `progressAppliedAt` →
+> ModuleProgress increment.
 
 **Action sequence (Playwright):**
 
 **Phase 10A — Schedule (0-20 detik):**
 - Klik "Live Session" → `/tutor/live`
-- Klik "Jadwalkan Live Baru"
-- Isi form: judul "Demo Live Session", pilih modul, set tanggal+jam,
-  pilih tipe "Workshop"
-- Klik "Jadwalkan" → kembali ke list, event baru muncul
+- Klik tombol **"+ Buat Live Session Baru"** (`CreateLiveEventForm`)
+- Isi form: judul "Demo Live Session", pilih modul dari dropdown,
+  scheduled-at, duration (default 60 menit), meeting URL (opsional)
+- Klik submit → kembali ke list, event baru muncul dengan join code
 
-**Phase 10B — Pelaksanaan (20-55 detik):**
-- Klik event "Test Slide Sync In-Class" (yang sudah live di seed) atau
-  event yang baru saja dibuat → buka room presenter `/tutor/live/[id]`
-- Tampilkan layout: slide canvas tengah, side panel kanan, status bar atas
-- Klik "Upload Slide" → demo cepat upload PDF (atau skip ke event yang
-  sudah punya slide)
-- Klik navigasi slide (next/prev)
-- Klik tombol "Push Quiz" → modal muncul, pilih kuis pretest, klik "Kirim"
-- Tampilkan badge "Quiz aktif, 0/3 jawab"
-- Side panel kanan: tab Chat, ketik pesan demo "Halo semua, selamat datang"
-- Tab Q&A: tampilkan list pertanyaan dari siswa
+**Phase 10B — Presenter Room (20-55 detik):**
+- Klik event yang sudah live ("Test Slide Sync In-Class" dari seed)
+- Navigasi ke **`/live-session/[id]/room`** (route presenter actual,
+  bukan `/tutor/live/[id]`)
+- Tampilkan `PresenterRoom`: slide canvas tengah, panel kanan dengan tab
+  Chat / Q&A / Attendance, status bar atas
+- Klik navigasi slide (next/prev panah)
+- Klik tombol **Push Quiz** → `PushQuizModal` muncul, pilih bank soal,
+  klik "Kirim"
+- Tampilkan badge "Quiz aktif"
+- Panel kanan tab Chat: ketik pesan demo "Halo semua, selamat datang"
+- Switch tab Q&A: tampilkan list pertanyaan dengan voting count
 
-**Phase 10C — End (55-75 detik):**
-- Klik "Akhiri Sesi" → modal konfirmasi
-- Konfirmasi → recording disimpan, learning-complete event ter-trigger
-- Toast notification "Sesi berakhir, rekaman tersimpan"
+**Phase 10C — End Session & Post-event (55-75 detik):**
+- Klik **"Akhiri Sesi"** → `EndSessionDialog` modal konfirmasi
+- Konfirmasi → `progressAppliedAt` di-set, ModuleProgress siswa peserta
+  auto-increment
+- Balik ke `/tutor/live/[id]` (post-event page) → tampilkan
+  `AttendanceTable` + `AssignmentPanel`
+- Hover field "Recording URL" → menunjukkan ini **input manual** untuk
+  link rekaman Zoom/dll
 
 **VO bahasa Indonesia:**
 
 > Sekarang bagian paling seru — Live Session. Dari menu Live Session,
-> klik Jadwalkan Live Baru, isi judul, pilih modul, tentukan tanggal
-> dan tipe sesi: Workshop, Reguler, atau Q-and-A. Saat tiba waktunya,
-> Anda masuk ke ruang siaran.
+> klik Buat Live Session Baru, isi judul, pilih modul yang akan diajar,
+> set tanggal dan durasi, plus link meeting eksternal seperti Zoom atau
+> Google Meet kalau perlu. Saat tiba waktunya, Anda masuk ke ruang
+> presenter dengan join code enam digit yang sudah digenerate otomatis
+> untuk siswa.
 >
-> Di room presenter, slide tampil di tengah, dan panel kanan untuk chat
-> dan tanya-jawab. Upload PDF slide dengan satu klik, lalu navigasi
-> dengan tombol panah. Mau kasih kuis di tengah pelajaran? Tekan Push
-> Quiz, pilih bank soal yang sudah Bapak Ibu siapkan, kirim. Siswa
-> langsung dapat notifikasi dan kuisnya muncul di layar mereka.
+> Di ruang presenter, slide tampil di tengah dengan navigasi panah, dan
+> panel kanan punya chat live, tab tanya-jawab dengan voting pertanyaan
+> dari siswa, dan daftar kehadiran real-time. Mau kasih kuis di tengah
+> pelajaran? Tekan Push Quiz, pilih bank soal yang sudah disiapkan,
+> kirim — siswa di ruang yang sama langsung dapat kuisnya muncul di
+> layar mereka.
 >
-> Setelah selesai, klik Akhiri Sesi. Rekaman otomatis tersimpan, dan
-> sertifikat kelulusan siswa terbit otomatis kalau mereka memenuhi
-> kriteria.
+> Setelah sesi selesai, klik Akhiri Sesi. Sistem otomatis catat
+> kehadiran siswa dan menaikkan progress modul mereka. Kalau Anda
+> merekam sesi via Zoom atau platform lain, Bapak Ibu bisa input link
+> rekamannya di halaman detail event nanti supaya siswa bisa nonton
+> ulang. Sertifikat modul terbit otomatis untuk siswa yang nantinya
+> lulus posttest — terpisah dari live session.
 
 **Character expression:**
 - Phase 10A: explaining, scheduling gesture
@@ -535,12 +618,14 @@ book" (palms facing up).
 
 **VO bahasa Indonesia:**
 
-> Untuk komunikasi privat dengan siswa, gunakan menu Pesan. Sementara
-> menu Analitik kasih Bapak Ibu gambaran besar performa siswa dan modul
-> yang Anda ampu. Profil Saya untuk update foto, bio, dan keahlian Anda.
-> Itu tour fitur tutor Senopati Academy. Kalau butuh bantuan, hubungi
-> tim support kami di halo@asksenopati.com. Selamat mengajar dan terima
-> kasih sudah jadi bagian dari Senopati!
+> Untuk komunikasi privat dengan siswa, gunakan menu Pesan. Menu Analitik
+> kasih Bapak Ibu gambaran besar performa: rata-rata nilai ujian akhir
+> siswa per modul, completion rate, dan tren keterlibatan siswa. Profil
+> Saya untuk update foto, bio, dan keahlian Anda — informasi ini juga
+> muncul di card mentor di halaman katalog modul. Itu tour lengkap fitur
+> tutor Senopati Academy. Kalau butuh bantuan atau punya usulan materi,
+> hubungi tim support kami di halo@asksenopati.com. Selamat mengajar dan
+> terima kasih sudah jadi bagian dari Senopati!
 
 **Character expression:** Warm closing smile, slight wave at end.
 

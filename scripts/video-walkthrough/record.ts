@@ -243,28 +243,32 @@ async function chapter05(ctx: ChapterCtx): Promise<void> {
 
   ctx.mark("zoom-stat-strip", { factor: 1.3, durationMs: 4000, focus: "stat-strip" });
 
-  // Hover each stat card label.
-  const statCards = ['text=Total Siswa', 'text=Pending Review', 'text=Unread Thread', 'text=Completion'];
+  // Hover stat strip — labels accurate to actual UI.
+  const statCards = ['text=Total Modul', 'text=Siswa Aktif', 'text=Pending Review', 'text=Avg Completion'];
   for (const s of statCards) {
     await ctx.moveTo(s).catch(() => {});
     await ctx.page.waitForTimeout(900);
   }
 
-  // Try entering the first module's session editor.
+  // Open detail page — read-only insight, NOT editor.
   const moduleLink = ctx.page.locator('a[href*="/tutor/modul/"]').first();
   if (await moduleLink.count()) {
     await moduleLink.click();
     await ctx.page.waitForLoadState("domcontentloaded");
-    ctx.mark("module-editor-opened");
+    ctx.mark("module-detail-opened");
     await ctx.page.waitForTimeout(2000);
   }
 
-  // Highlight the "Tambah Materi" / status badge area.
-  await ctx.hoverHighlight('button:has-text("Tambah Materi"), :text("Tambah Materi")', 1500).catch(() => {});
-  ctx.mark("zoom-tambah-materi", { factor: 1.3, durationMs: 3500, focus: "tambah-materi-btn" });
+  // Show siswa progress per sesi + diskusi muncul.
+  ctx.mark("zoom-siswa-progress", { factor: 1.4, durationMs: 4000, focus: "siswa-progress" });
+  await ctx.page.mouse.wheel(0, 400);
+  await ctx.page.waitForTimeout(2500);
 
-  await ctx.hoverHighlight(':text("Draft"), [data-status="draft"]', 1500).catch(() => {});
-  ctx.mark("zoom-status-badge", { factor: 1.4, durationMs: 4000, focus: "status-badge" });
+  // Subtle hover ke CTA Review / Diskusi (yang ADA — bukan Tambah Materi).
+  await ctx.hoverHighlight(
+    ':text("Lihat Diskusi"), :text("Review Tugas"), a[href*="/tutor/review"]',
+    1500,
+  ).catch(() => {});
 
   await ctx.padToTarget();
 }
@@ -274,16 +278,17 @@ async function chapter06(ctx: ChapterCtx): Promise<void> {
   await ctx.page.goto(`${BASE_URL}/tutor/bahan-ajar`, { waitUntil: "domcontentloaded" });
   await ctx.page.waitForTimeout(1500);
 
-  await ctx.moveTo('button:has-text("Upload"), :text("Upload Bahan Baru")').catch(() => {});
-  await ctx.page.waitForTimeout(1500);
-
-  // Try to open a version-history menu on the first bahan card.
-  const versiBtn = ctx.page.locator('button:has-text("Versi"), :text("Versi")').first();
-  if (await versiBtn.count()) {
-    await versiBtn.hover().catch(() => {});
-    ctx.mark("zoom-version-history", { factor: 1.4, durationMs: 4000, focus: "version-list" });
-    await ctx.page.waitForTimeout(2500);
+  // Tutor read-only — hover cards untuk perlihatkan badge tipe + size,
+  // bukan Upload button (tidak ada di sisi tutor).
+  const cards = ctx.page.locator('[data-testid="bahan-card"], article:has(:text("PDF")), article:has(:text("DOCX"))');
+  const count = await cards.count().catch(() => 0);
+  for (let i = 0; i < Math.min(count, 3); i++) {
+    await cards.nth(i).hover().catch(() => {});
+    await ctx.page.waitForTimeout(800);
   }
+
+  ctx.mark("zoom-bahan-card", { factor: 1.3, durationMs: 4000, focus: "bahan-card-detail" });
+  await ctx.hoverHighlight('a:has-text("Download"), button:has-text("Download")', 1500).catch(() => {});
 
   await ctx.padToTarget();
 }
@@ -293,28 +298,31 @@ async function chapter07(ctx: ChapterCtx): Promise<void> {
   await ctx.page.goto(`${BASE_URL}/tutor/materi`, { waitUntil: "domcontentloaded" });
   await ctx.page.waitForTimeout(1500);
 
-  const newBtn = ctx.page.locator('a[href*="/tutor/materi/baru"], button:has-text("Buat Soal Baru")').first();
-  await newBtn.click().catch(() => {});
-  await ctx.page.waitForLoadState("domcontentloaded");
-  ctx.mark("soal-form-opened");
+  // List bank soal yang tersedia per modul tutor (read-only).
+  ctx.mark("zoom-soal-list", { factor: 1.3, durationMs: 3500, focus: "soal-list" });
+  await ctx.page.mouse.wheel(0, 300);
   await ctx.page.waitForTimeout(1500);
 
-  // Fill out the question form with placeholder content for demo.
-  const qInput = ctx.page.locator('textarea[name*="question"], input[name*="question"]').first();
-  if (await qInput.count()) {
-    await qInput.click();
-    await qInput.type("Apa kepanjangan AI?", { delay: 60 });
+  // Klik Tambah Materi → form Usulan Materi (BUKAN create soal langsung).
+  const newBtn = ctx.page.locator('a[href*="/tutor/materi/baru"], button:has-text("Tambah Materi")').first();
+  await newBtn.click().catch(() => {});
+  await ctx.page.waitForLoadState("domcontentloaded");
+  ctx.mark("usulan-form-opened");
+  await ctx.page.waitForTimeout(1500);
+
+  // Demo hover field konteks + usulan + alasan. Tidak submit (demo only).
+  const fields = [
+    'textarea[name*="konteks"], input[name*="konteks"]',
+    'textarea[name*="usulan"], input[name*="usulan"]',
+    'textarea[name*="alasan"], input[name*="alasan"]',
+  ];
+  for (const sel of fields) {
+    await ctx.moveTo(sel).catch(() => {});
+    await ctx.page.waitForTimeout(900);
   }
 
-  const optionInputs = ctx.page.locator('input[name*="option"], input[name*="choice"]');
-  const ocount = await optionInputs.count();
-  for (let i = 0; i < Math.min(ocount, 4); i++) {
-    await optionInputs.nth(i).click();
-    await optionInputs.nth(i).type(["Artificial Intelligence", "Auto Internet", "All In", "Avian Insight"][i] ?? "Opsi", { delay: 40 });
-  }
-
-  ctx.mark("zoom-tipe-dropdown", { factor: 1.5, durationMs: 4000, focus: "tipe-dropdown" });
-  await ctx.hoverHighlight('select[name*="type"], :text("Tipe")', 1500).catch(() => {});
+  ctx.mark("zoom-usulan-form", { factor: 1.4, durationMs: 4000, focus: "usulan-form" });
+  await ctx.hoverHighlight('button:has-text("Kirim Usulan"), button[type="submit"]', 1500).catch(() => {});
 
   await ctx.padToTarget();
 }
@@ -391,47 +399,73 @@ async function chapter09(ctx: ChapterCtx): Promise<void> {
 async function chapter10(ctx: ChapterCtx): Promise<void> {
   ctx.mark("chapter-start");
 
-  // Phase A: schedule
+  // Phase A: schedule via /tutor/live + CreateLiveEventForm.
   await ctx.page.goto(`${BASE_URL}/tutor/live`, { waitUntil: "domcontentloaded" });
   await ctx.page.waitForTimeout(1500);
 
-  const scheduleBtn = ctx.page.locator('button:has-text("Jadwalkan"), a:has-text("Jadwalkan Live Baru")').first();
+  const scheduleBtn = ctx.page
+    .locator('button:has-text("Buat Live Session"), button:has-text("Jadwalkan"), a:has-text("Buat Live")')
+    .first();
   if (await scheduleBtn.count()) {
     await scheduleBtn.click();
     await ctx.page.waitForTimeout(1500);
     ctx.mark("jadwal-form-opened");
 
+    // Form fields actual: title, description, moduleSlug, scheduledAt,
+    // durationMinutes, meetingUrl, maxParticipants. NO tipe sesi.
     const titleInput = ctx.page.locator('input[name*="title"], input[placeholder*="judul" i]').first();
     if (await titleInput.count()) {
       await titleInput.click();
       await titleInput.type("Demo Live Session", { delay: 50 });
     }
-    ctx.mark("zoom-tipe-sesi", { factor: 1.4, durationMs: 4000, focus: "tipe-sesi-radio" });
-    await ctx.page.waitForTimeout(2500);
 
-    // Cancel rather than create — keeps DB clean. Compose can crossfade.
+    // Hover module dropdown + duration + meeting URL.
+    await ctx.moveTo('select[name*="module"], select[name*="modul"]').catch(() => {});
+    await ctx.page.waitForTimeout(800);
+    await ctx.moveTo('input[name*="duration"], input[type="number"]').catch(() => {});
+    await ctx.page.waitForTimeout(800);
+    await ctx.moveTo('input[name*="meeting"], input[type="url"]').catch(() => {});
+    await ctx.page.waitForTimeout(800);
+
+    ctx.mark("zoom-jadwal-form", { factor: 1.3, durationMs: 4000, focus: "jadwal-form" });
+    await ctx.page.waitForTimeout(2000);
+
+    // Cancel rather than create — keeps DB clean.
     await ctx.page.keyboard.press("Escape");
   }
 
-  // Phase B: enter presenter room of the seeded live event (Test Slide Sync).
+  // Phase B: enter PRESENTER room (route aktual = /live-session/[id]/room,
+  // bukan /tutor/live/[id] yang merupakan post-event management).
   await ctx.page.goto(`${BASE_URL}/tutor/live`, { waitUntil: "domcontentloaded" });
   await ctx.page.waitForTimeout(1000);
+
+  // Extract event ID dari link list, lalu navigate ke /live-session/[id]/room.
   const liveCard = ctx.page.locator('a[href*="/tutor/live/"]').first();
+  let eventId: string | null = null;
   if (await liveCard.count()) {
-    await liveCard.click();
-    await ctx.page.waitForLoadState("domcontentloaded");
+    const href = (await liveCard.getAttribute("href")) ?? "";
+    const m = href.match(/\/tutor\/live\/([^/?#]+)/);
+    eventId = m?.[1] ?? null;
+  }
+
+  if (eventId) {
+    await ctx.page.goto(`${BASE_URL}/live-session/${eventId}/room`, {
+      waitUntil: "domcontentloaded",
+    });
     ctx.mark("presenter-room-opened");
     await ctx.page.waitForTimeout(3000);
   }
 
-  // Demo: navigate slides, push quiz, type chat message.
+  // Navigate slides.
   await ctx.moveTo('button[aria-label*="next" i], button:has-text("Next")').catch(() => {});
   await ctx.page.locator('button[aria-label*="next" i], button:has-text("Next")').first().click().catch(() => {});
   await ctx.page.waitForTimeout(1500);
 
+  // Push Quiz modal (PushQuizModal component).
   ctx.mark("zoom-push-quiz", { factor: 1.5, durationMs: 4000, focus: "push-quiz-btn" });
   await ctx.hoverHighlight('button:has-text("Push Quiz"), :text("Push Quiz")', 1500).catch(() => {});
 
+  // Chat / Q&A panel right side.
   ctx.mark("zoom-chat-qna", { factor: 1.3, durationMs: 4000, focus: "side-panel" });
   const chatInput = ctx.page.locator('input[placeholder*="pesan" i], textarea[placeholder*="pesan" i]').first();
   if (await chatInput.count()) {
@@ -439,8 +473,20 @@ async function chapter10(ctx: ChapterCtx): Promise<void> {
     await chatInput.type("Halo semua, selamat datang!", { delay: 50 });
   }
 
+  // End session via EndSessionDialog.
   ctx.mark("flash-white", { type: "transition" });
   await ctx.moveTo('button:has-text("Akhiri")').catch(() => {});
+
+  // Phase C: balik ke /tutor/live/[id] (post-event management) untuk
+  // demo AttendanceTable + AssignmentPanel + recording URL input.
+  if (eventId) {
+    await ctx.page.goto(`${BASE_URL}/tutor/live/${eventId}`, {
+      waitUntil: "domcontentloaded",
+    });
+    ctx.mark("post-event-management-opened");
+    await ctx.page.waitForTimeout(2000);
+    await ctx.hoverHighlight('input[name*="recording"], :text("Recording URL")', 1500).catch(() => {});
+  }
 
   await ctx.padToTarget();
 }
