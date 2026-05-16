@@ -53,12 +53,17 @@ export const CHAPTERS: ChapterSpec[] = [
     title: "Program Paham AI Overview",
     targetMs: 45_000,
     voScript:
-      "Program unggulan kami namanya Paham AI — dua puluh dua modul yang " +
-      "mengantar siswa dari nol sampai paham konsep dan praktik AI dasar. " +
-      "Tiap modul terdiri dari beberapa sesi: ada video pengantar, materi " +
-      "bacaan, kuis pendek, dan biasanya satu live session interaktif sama " +
-      "tutor seperti Bapak Ibu. Tugas tutor di Paham AI adalah memimpin " +
-      "live session, jawab diskusi, dan kasih feedback pas siswa kesulitan.",
+      "Program perdana kami namanya Paham AI — workshop intensif satu hari " +
+      "untuk siswa SMA dengan tagline \"Cerdas, Etis, Aman\". Pesertanya " +
+      "berkumpul dari pagi sampai sore, belajar tatap muka langsung. Total " +
+      "ada lima sesi terkurasi: dibuka dengan cerita interaktif Jeda yang " +
+      "membangun emotional anchor lewat kisah Alya dan keluarganya, lalu " +
+      "empat modul akademis — Introduction to AI sebagai dasar, Ethical " +
+      "Use of AI untuk etika, AI Prompts 101 untuk praktik dengan kerangka " +
+      "K-I-F-C, dan ditutup Fighting Hoax with AI untuk literasi digital. " +
+      "Tugas tutor di Paham AI adalah memandu seluruh rangkaian live tatap " +
+      "muka, memimpin diskusi, dan memastikan setiap siswa keluar workshop " +
+      "dengan bekal yang konkret.",
   },
   {
     num: 5,
@@ -144,11 +149,13 @@ export const CHAPTERS: ChapterSpec[] = [
     title: "Cerita Interaktif (Jeda)",
     targetMs: 35_000,
     voScript:
-      "Senopati Academy juga punya fitur khas: Cerita Interaktif. Lewat " +
-      "menu ini, Bapak Ibu bisa lihat dan kelola cerita bercabang yang " +
-      "membantu siswa belajar dengan cara naratif — siswa membuat pilihan, " +
-      "dan ceritanya berkembang sesuai keputusan mereka. Cocok untuk " +
-      "mengajar empati, pengambilan keputusan, dan eksplorasi karir.",
+      "Cerita Interaktif adalah fitur khas Senopati Academy — dan kalau " +
+      "Bapak Ibu masih ingat dari awal tadi, Jeda yang jadi pembuka " +
+      "workshop Paham AI dikelola dari sini. Lewat menu ini, Anda bisa " +
+      "lihat dan kelola cerita bercabang yang membantu siswa belajar dengan " +
+      "cara naratif: siswa membuat pilihan, dan ceritanya berkembang sesuai " +
+      "keputusan mereka. Cocok untuk mengajar empati, pengambilan " +
+      "keputusan, dan literasi digital.",
   },
   {
     num: 12,

@@ -74,7 +74,10 @@ class ChapterCtx {
     const y = box.y + box.height / 2;
     await this.page.mouse.move(x, y, { steps: opts.steps ?? 18 });
     if (opts.pulse) {
-      await this.page.evaluate(([cx, cy]) => (window as any).__pulseCursor?.(cx, cy), [x, y]);
+      await this.page.evaluate(
+        ([cx, cy]: [number, number]) => (window as any).__pulseCursor?.(cx, cy),
+        [x, y],
+      );
     }
   }
 
@@ -83,7 +86,7 @@ class ChapterCtx {
     try {
       await this.moveTo(selector, { pulse: true });
       await this.page.evaluate(
-        ([sel, dur]) => (window as any).__highlightElement?.(sel, dur),
+        ([sel, dur]: [string, number]) => (window as any).__highlightElement?.(sel, dur),
         [selector, durationMs],
       );
       await this.page.waitForTimeout(durationMs);
@@ -197,31 +200,38 @@ async function chapter03(ctx: ChapterCtx): Promise<void> {
 
 async function chapter04(ctx: ChapterCtx): Promise<void> {
   ctx.mark("chapter-start");
-  await ctx.page.goto(`${BASE_URL}/tutor/modul`, { waitUntil: "domcontentloaded" });
-  await ctx.page.waitForTimeout(1500);
+  // Pakai halaman program publik — sumber kebenaran struktur Paham AI
+  // (5 modul: Jeda + 4 akademis). /tutor/modul hanya scope mentor.
+  await ctx.page.goto(`${BASE_URL}/program/paham-ai`, { waitUntil: "domcontentloaded" });
+  await ctx.page.waitForTimeout(2000);
 
-  await ctx.page.mouse.wheel(0, 400);
-  await ctx.page.waitForTimeout(1500);
+  ctx.mark("zoom-stat-5modul", { factor: 1.3, durationMs: 4000, focus: "hero-stat-modul" });
+  await ctx.moveTo(':text("5 modul"), :text("Jeda + 4 modul akademis")', { pulse: true }).catch(() => {});
+  await ctx.page.waitForTimeout(3000);
 
-  ctx.mark("zoom-modul-22", { factor: 1.3, durationMs: 4000, focus: "modul-22-badge" });
-
-  // Click the first available module card — falls back to a generic anchor.
-  const firstModuleLink = ctx.page
-    .locator('a[href*="/modul/"]:has-text("AI"), a[href*="/modul/"]')
-    .first();
-  if (await firstModuleLink.count()) {
-    await firstModuleLink.scrollIntoViewIfNeeded();
-    await ctx.moveTo('a[href*="/modul/"]', { pulse: true });
-    await firstModuleLink.click();
-    ctx.mark("modul-detail-opened");
-    await ctx.page.waitForLoadState("domcontentloaded");
+  // Scroll ke section Kurikulum.
+  const kurikulum = ctx.page.locator('#kurikulum, :text("Kurikulum")').first();
+  if (await kurikulum.count()) {
+    await kurikulum.scrollIntoViewIfNeeded();
+  } else {
+    await ctx.page.mouse.wheel(0, 600);
   }
+  await ctx.page.waitForTimeout(1500);
 
-  await ctx.page.waitForTimeout(2500);
-  await ctx.page.mouse.wheel(0, 500);
-  await ctx.page.waitForTimeout(2500);
+  ctx.mark("zoom-jeda-card", { factor: 1.4, durationMs: 4000, focus: "modul-jeda" });
+  await ctx.hoverHighlight('a[href*="/cerita/jeda"], :text("Jeda — Alya")', 1800).catch(() => {});
 
-  ctx.mark("zoom-syllabus", { factor: 1.5, durationMs: 4000, focus: "syllabus" });
+  // Hover the 4 academic module cards in workshop order.
+  const moduleAnchors = [
+    'a[href*="modul-01-introduction-to-ai"]',
+    'a[href*="modul-02-ethical-use-0f-ai"]',
+    'a[href*="modul-22-ai-prompts-101"]',
+    'a[href*="modul-11-fighting-hoax-with-ai"]',
+  ];
+  ctx.mark("zoom-kurikulum-grid", { factor: 1.5, durationMs: 4500, focus: "modul-grid" });
+  for (const sel of moduleAnchors) {
+    await ctx.hoverHighlight(sel, 1400).catch(() => {});
+  }
 
   await ctx.padToTarget();
 }
@@ -557,7 +567,7 @@ async function main(): Promise<void> {
   await browser.close();
 
   // Locate the produced webm — Playwright names it with a temp filename.
-  const webms = fs.readdirSync(SCREEN_DIR).filter((f) => f.endsWith(".webm"));
+  const webms = fs.readdirSync(SCREEN_DIR).filter((f: string) => f.endsWith(".webm"));
   const recording = webms.length ? path.join(SCREEN_DIR, webms[webms.length - 1]) : null;
 
   fs.writeFileSync(

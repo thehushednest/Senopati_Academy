@@ -197,32 +197,46 @@ sedang di-hover, sync dengan VO.
 ## Chapter 4 — Program Paham AI Overview (45 detik)
 
 **Durasi:** 1:30–2:15
-**Word count:** ~110 kata
+**Word count:** ~115 kata
 
 **Action sequence (Playwright):**
-- Klik "Modul Saya" di sidebar → `/tutor/modul`
-- Scroll ke section utama (modul yang tutor ampuh)
-- Klik kartu modul "Introduction to AI" (atau modul pertama yang tersedia)
-- Tampilkan detail page: hero, deskripsi, syllabus
-- Scroll perlahan ke bawah memperlihatkan structure: Session 1, 2, 3, ...
-- Hover ke salah satu session — tampilkan badge "Live + Self-paced"
+- Navigasi ke `/program/paham-ai` (halaman publik program — sumber
+  kebenaran untuk struktur 5 modul + Jeda)
+- Tampilkan hero: tagline "Cerdas, Etis, Aman", durasi "1 hari",
+  badge "5 modul"
+- Scroll ke section Kurikulum
+- Hover berurutan kartu modul sesuai urutan workshop:
+  1. **Jeda — Alya & Sinyal Sinyal Asing** (Pembuka, cerita interaktif, 75 min)
+  2. **Modul 01: Introduction to AI** (Dasar, 60 min)
+  3. **Modul 02: Ethical Use of AI** (Etika, 60 min)
+  4. **Modul 22: AI Prompts 101** (Praktik / K-I-F-C, 90 min)
+  5. **Modul 11: Fighting Hoax with AI** (Penutup / verifikasi 5C, 90 min)
+- Scroll ke section Outcomes — hover salah satu poin
 
 **VO bahasa Indonesia:**
 
-> Program unggulan kami namanya Paham AI — dua puluh dua modul yang
-> mengantar siswa dari nol sampai paham konsep dan praktik AI dasar.
-> Tiap modul terdiri dari beberapa sesi: ada video pengantar, materi
-> bacaan, kuis pendek, dan biasanya satu live session interaktif sama
-> tutor seperti Bapak Ibu. Tugas tutor di Paham AI adalah memimpin live
-> session, jawab diskusi, dan kasih feedback pas siswa kesulitan.
+> Program perdana kami namanya Paham AI — workshop intensif satu hari
+> untuk siswa SMA dengan tagline "Cerdas, Etis, Aman". Pesertanya
+> berkumpul dari pagi sampai sore, belajar tatap muka langsung. Total
+> ada lima sesi terkurasi: dibuka dengan cerita interaktif Jeda yang
+> membangun emotional anchor lewat kisah Alya dan keluarganya, lalu
+> empat modul akademis — Introduction to AI sebagai dasar, Ethical Use
+> of AI untuk etika, AI Prompts 101 untuk praktik dengan kerangka
+> K-I-F-C, dan ditutup Fighting Hoax with AI untuk literasi digital.
+> Tugas tutor di Paham AI adalah memandu seluruh rangkaian live tatap
+> muka, memimpin diskusi, dan memastikan setiap siswa keluar workshop
+> dengan bekal yang konkret.
 
 **Character expression:** Engaged, explaining, hand gesture menggambar
-struktur tiga tingkat.
+arc (open hand → forward sweep) saat menyebut sequence Jeda → 4 modul.
+Slight nod tiap nama modul disebut.
 
 **Visual cue:**
-- Detik 1:35: zoom 1.3x ke badge "Modul 01-22" di kartu modul
-- Detik 2:00: zoom 1.5x ke section "Syllabus" memperlihatkan struktur
-  per-sesi
+- Detik 1:35: zoom 1.3x ke stat "5 modul · Jeda + 4 modul akademis" di hero
+- Detik 1:50: zoom 1.4x ke kartu Jeda saat VO mention "dibuka dengan
+  cerita interaktif Jeda" — tegaskan ini akan dibahas lagi di Chapter 11
+- Detik 2:05: zoom 1.5x ke section Kurikulum yang menampilkan 4 kartu
+  modul akademis dalam grid
 
 ---
 
@@ -465,8 +479,9 @@ slight tilt + hand move horizontally).
 
 **Action sequence (Playwright):**
 - Klik "Cerita Interaktif" di sidebar → `/tutor/cerita`
-- Tampilkan list cerita yang tersedia (mis. "Jeda — Persimpangan")
-- Klik salah satu cerita → editor scene
+- Tampilkan list cerita yang tersedia — sorot **"Jeda — Alya & Sinyal
+  Sinyal Asing"** (yang Elsya sebut di Chapter 4 sebagai pembuka Paham AI)
+- Klik cerita Jeda → editor scene
 - Tampilkan visual: scene graph (node/branch), preview scene aktif,
   panel pilihan
 - Hover salah satu choice node → tampilkan emotion tag + next-scene route
@@ -474,11 +489,13 @@ slight tilt + hand move horizontally).
 
 **VO bahasa Indonesia:**
 
-> Senopati Academy juga punya fitur khas: Cerita Interaktif. Lewat menu
-> ini, Bapak Ibu bisa lihat dan kelola cerita bercabang yang membantu
-> siswa belajar dengan cara naratif — siswa membuat pilihan, dan
-> ceritanya berkembang sesuai keputusan mereka. Cocok untuk mengajar
-> empati, pengambilan keputusan, dan eksplorasi karir.
+> Cerita Interaktif adalah fitur khas Senopati Academy — dan kalau
+> Bapak Ibu masih ingat dari awal tadi, Jeda yang jadi pembuka workshop
+> Paham AI dikelola dari sini. Lewat menu ini, Anda bisa lihat dan
+> kelola cerita bercabang yang membantu siswa belajar dengan cara
+> naratif: siswa membuat pilihan, dan ceritanya berkembang sesuai
+> keputusan mereka. Cocok untuk mengajar empati, pengambilan keputusan,
+> dan literasi digital.
 
 **Character expression:** Curious, slight excited tone — gesture "open
 book" (palms facing up).
