@@ -270,15 +270,15 @@ Slight nod tiap nama modul disebut.
 
 > Di menu Modul Saya, Bapak Ibu bisa lihat semua modul yang Anda ampu,
 > lengkap dengan statistik di bagian atas: total modul, siswa yang aktif,
-> tugas yang menunggu review, dan rata-rata penyelesaian siswa. Klik
+> tugas yang sudah masuk dari siswa, dan rata-rata penyelesaian. Klik
 > salah satu modul untuk masuk ke detail — Anda dapat lihat siapa saja
-> siswa yang sedang mengerjakan modul itu, progress mereka per sesi,
-> thread diskusi yang muncul, dan tugas yang sudah masuk. Konten modul
-> — materi bacaan, kuis, urutan sesi — dikurasi oleh tim pusat Senopati,
-> jadi Bapak Ibu bisa fokus mengajar dan mendampingi tanpa harus pusing
-> soal pengelolaan konten. Kalau Anda menemukan kebutuhan materi baru
-> saat mengajar, ada menu khusus untuk submit usulan ke tim kurasi yang
-> akan kita lihat di chapter berikutnya.
+> siswa yang sedang mengerjakan modul itu, progress mereka per sesi, dan
+> thread diskusi yang muncul. Konten modul — materi bacaan, kuis, urutan
+> sesi — dikurasi oleh tim pusat Senopati, jadi Bapak Ibu bisa fokus
+> mengajar dan mendampingi tanpa harus pusing soal pengelolaan konten.
+> Kalau Anda menemukan kebutuhan materi baru saat mengajar, ada menu
+> khusus untuk submit usulan ke tim kurasi yang akan kita lihat di
+> chapter berikutnya.
 
 **Character expression:** Reassuring, slight nod saat menyebut "tim pusat
 yang kurasi". Hand gesture "rilis" (palms open relaxed) saat "fokus
@@ -378,46 +378,70 @@ indicate tutor knowledge is valued.
 
 ---
 
-## Chapter 8 — Review Tugas & IELTS Writing (45 detik)
+## Chapter 8 — Review Tugas & IELTS Writing: Hasil Scoring AI (45 detik)
 
 **Durasi:** 4:15–5:00
-**Word count:** ~110 kata
+**Word count:** ~115 kata
 
+> ℹ️ **Design note:** Review tugas + IELTS Writing scoring = **AI model
+> lokal Senopati**, BUKAN tugas tutor manual. Menu di sidebar tetap ada
+> tapi tujuannya **view-only** — tutor melihat hasil AI scoring untuk
+> identifikasi siswa yang butuh perhatian, dan kasih feedback opsional
+> saat live session. Tidak ada beban grading manual.
+>
 > ⚠️ Conditional: chapter ini hanya direkam kalau
-> `NEXT_PUBLIC_REVIEW_ENABLED=true`. Kalau env disable, skip chapter ini
-> dan total video jadi ~6:45.
+> `NEXT_PUBLIC_REVIEW_ENABLED=true` (flag yang determine menu visibility
+> di sidebar). Kalau flag disable, skip chapter ini dan total video jadi
+> ~6:45.
 
 **Action sequence (Playwright):**
 
-**Phase 8A — Review Tugas umum (0-20 detik):**
+**Phase 8A — Review Tugas (lihat hasil AI) (0-20 detik):**
 - Klik "Review Tugas" → `/tutor/review`
-- List submission menunggu review (badge "Belum dinilai")
+- List submission siswa dengan **badge skor AI** (mis. "AI: 85/100",
+  "AI: Needs Revision") — bukan badge "Belum dinilai" yang lama
 - Klik 1 submission → `/tutor/review/[id]`
-- Tampilkan jawaban siswa + form rubric + field feedback
-- Demo ketik feedback singkat, set skor
+- Tampilkan jawaban siswa + **AI feedback breakdown** (sisi mana yang
+  sudah bagus, sisi mana yang masih kurang)
+- Hover (tidak klik) field "Catatan Tutor (opsional)" — buat tutor yang
+  mau kasih feedback tambahan
 
-**Phase 8B — IELTS Writing (20-45 detik):**
+**Phase 8B — IELTS Writing (AI band scoring) (20-45 detik):**
 - Klik "Review IELTS Writing" → `/tutor/review/writing`
-- Tampilkan list essay IELTS dari siswa
-- Klik 1 essay → tampilkan editor side-by-side (essay siswa + rubric IELTS)
-- Highlight band score selectors (Task Achievement, Coherence, Lexical
-  Resource, Grammar)
+- Tampilkan list essay IELTS dengan **band score AI** per siswa
+- Klik 1 essay → tampilkan editor side-by-side: essay siswa + AI
+  scoring panel
+- Highlight 4 dimensi band score yang dinilai AI: Task Achievement,
+  Coherence & Cohesion, Lexical Resource, Grammatical Range — plus
+  overall band (skala 0-9, step 0.5)
+- Tidak ada step "input band" atau "submit grade" — semua angka sudah
+  diisi AI
 
 **VO bahasa Indonesia:**
 
-> Setelah siswa mengumpulkan tugas atau kuis terbuka, mereka muncul di
-> menu Review Tugas — siap Bapak Ibu nilai. Klik tugas, baca jawaban
-> siswa, isi rubric, dan tulis feedback. Khusus untuk persiapan IELTS,
-> ada menu terpisah Review IELTS Writing dengan rubric resmi IELTS:
-> empat dimensi penilaian — Task Achievement, Coherence, Lexical Resource,
-> dan Grammatical Range — masing-masing dengan band score sembilan poin.
+> Bapak Ibu mungkin penasaran dengan dua menu di sidebar tadi: Review
+> Tugas dan Review IELTS Writing. Kabar baiknya, ini bukan beban kerja
+> baru untuk tutor. Semua tugas siswa, termasuk essay IELTS Writing,
+> dinilai otomatis oleh model AI lokal yang dikembangkan tim teknis
+> Senopati. Khusus untuk IELTS Writing, model AI kami menilai empat
+> dimensi resmi — Task Achievement, Coherence, Lexical Resource, dan
+> Grammatical Range — masing-masing dengan band score sembilan poin,
+> sama seperti rubric IELTS asli. Tutor cukup buka kedua menu ini untuk
+> lihat hasil scoring AI, identifikasi siswa mana yang butuh perhatian
+> ekstra, dan kalau perlu beri feedback tambahan saat live session.
+> Jadi waktu Anda tetap untuk mengajar dan mendampingi — bukan
+> mengoreksi.
 
-**Character expression:** Attentive, occasional "checking" gesture (head
-slight tilt + hand move horizontally).
+**Character expression:** Reassuring smile, slight nod saat menyebut
+"bukan beban kerja baru" + "tim teknis Senopati". Open palm gesture saat
+"empat dimensi resmi". Smile + slight forward lean saat closing "bukan
+mengoreksi".
 
 **Visual cue:**
-- Detik 4:30: zoom 1.4x ke field rubric scorecard
-- Detik 4:50: zoom 1.5x ke 4 band score dimensions di IELTS form
+- Detik 4:30: zoom 1.4x ke badge skor AI di list submission (mis.
+  "AI: 85/100" dengan indicator robot/AI icon)
+- Detik 4:50: zoom 1.5x ke 4 band score panel AI di IELTS detail —
+  tegaskan ini hasil scoring AI, bukan input tutor
 
 ---
 

@@ -74,11 +74,11 @@ export const CHAPTERS: ChapterSpec[] = [
     voScript:
       "Di menu Modul Saya, Bapak Ibu bisa lihat semua modul yang Anda ampu, " +
       "lengkap dengan statistik di bagian atas: total modul, siswa yang " +
-      "aktif, tugas yang menunggu review, dan rata-rata penyelesaian " +
-      "siswa. Klik salah satu modul untuk masuk ke detail — Anda dapat " +
-      "lihat siapa saja siswa yang sedang mengerjakan modul itu, progress " +
-      "mereka per sesi, thread diskusi yang muncul, dan tugas yang sudah " +
-      "masuk. Konten modul — materi bacaan, kuis, urutan sesi — dikurasi " +
+      "aktif, tugas yang sudah masuk dari siswa, dan rata-rata " +
+      "penyelesaian. Klik salah satu modul untuk masuk ke detail — Anda " +
+      "dapat lihat siapa saja siswa yang sedang mengerjakan modul itu, " +
+      "progress mereka per sesi, dan thread diskusi yang muncul. " +
+      "Konten modul — materi bacaan, kuis, urutan sesi — dikurasi " +
       "oleh tim pusat Senopati, jadi Bapak Ibu bisa fokus mengajar dan " +
       "mendampingi tanpa harus pusing soal pengelolaan konten. Kalau Anda " +
       "menemukan kebutuhan materi baru saat mengajar, ada menu khusus " +
@@ -116,16 +116,21 @@ export const CHAPTERS: ChapterSpec[] = [
   },
   {
     num: 8,
-    title: "Review Tugas & IELTS Writing",
+    title: "Review Tugas & IELTS Writing: Hasil Scoring AI",
     targetMs: 45_000,
     voScript:
-      "Setelah siswa mengumpulkan tugas atau kuis terbuka, mereka muncul di " +
-      "menu Review Tugas — siap Bapak Ibu nilai. Klik tugas, baca jawaban " +
-      "siswa, isi rubric, dan tulis feedback. Khusus untuk persiapan IELTS, " +
-      "ada menu terpisah Review IELTS Writing dengan rubric resmi IELTS: " +
-      "empat dimensi penilaian — Task Achievement, Coherence, Lexical " +
+      "Bapak Ibu mungkin penasaran dengan dua menu di sidebar tadi: Review " +
+      "Tugas dan Review IELTS Writing. Kabar baiknya, ini bukan beban " +
+      "kerja baru untuk tutor. Semua tugas siswa, termasuk essay IELTS " +
+      "Writing, dinilai otomatis oleh model AI lokal yang dikembangkan " +
+      "tim teknis Senopati. Khusus untuk IELTS Writing, model AI kami " +
+      "menilai empat dimensi resmi — Task Achievement, Coherence, Lexical " +
       "Resource, dan Grammatical Range — masing-masing dengan band score " +
-      "sembilan poin.",
+      "sembilan poin, sama seperti rubric IELTS asli. Tutor cukup buka " +
+      "kedua menu ini untuk lihat hasil scoring AI, identifikasi siswa " +
+      "mana yang butuh perhatian ekstra, dan kalau perlu beri feedback " +
+      "tambahan saat live session. Jadi waktu Anda tetap untuk mengajar " +
+      "dan mendampingi — bukan mengoreksi.",
   },
   {
     num: 9,

@@ -330,10 +330,17 @@ async function chapter07(ctx: ChapterCtx): Promise<void> {
 async function chapter08(ctx: ChapterCtx): Promise<void> {
   ctx.mark("chapter-start");
 
-  // Phase A: review tugas umum
+  // Phase A: Review Tugas — view AI scoring result (no manual grading)
   await ctx.page.goto(`${BASE_URL}/tutor/review`, { waitUntil: "domcontentloaded" });
   await ctx.page.waitForTimeout(1500);
   ctx.mark("review-list-loaded");
+
+  // Hover badge AI scoring (mis. "AI: 85/100") di salah satu submission card.
+  await ctx.moveTo(
+    ':text("AI:"), [data-ai-score], :text-matches("AI\\s*:\\s*\\d")',
+    { pulse: true },
+  ).catch(() => {});
+  await ctx.page.waitForTimeout(1500);
 
   const firstReview = ctx.page.locator('a[href*="/tutor/review/"]').first();
   if (await firstReview.count()) {
@@ -341,10 +348,20 @@ async function chapter08(ctx: ChapterCtx): Promise<void> {
     await ctx.page.waitForLoadState("domcontentloaded");
     ctx.mark("review-detail-opened");
     await ctx.page.waitForTimeout(2500);
-    ctx.mark("zoom-rubric", { factor: 1.4, durationMs: 4000, focus: "rubric" });
+    // Zoom ke AI feedback breakdown (bukan rubric form input).
+    ctx.mark("zoom-ai-feedback", {
+      factor: 1.4,
+      durationMs: 4000,
+      focus: "ai-feedback-breakdown",
+    });
+    // Hover (NO click) field "Catatan Tutor (opsional)".
+    await ctx.hoverHighlight(
+      ':text("Catatan Tutor"), :text("Feedback Opsional"), textarea[name*="catatan"]',
+      1500,
+    ).catch(() => {});
   }
 
-  // Phase B: IELTS writing
+  // Phase B: IELTS Writing — AI band scoring view-only
   await ctx.page.goto(`${BASE_URL}/tutor/review/writing`, { waitUntil: "domcontentloaded" });
   await ctx.page.waitForTimeout(1500);
   ctx.mark("ielts-list-loaded");
@@ -355,7 +372,23 @@ async function chapter08(ctx: ChapterCtx): Promise<void> {
     await ctx.page.waitForLoadState("domcontentloaded");
     ctx.mark("ielts-detail-opened");
     await ctx.page.waitForTimeout(2500);
-    ctx.mark("zoom-band-score", { factor: 1.5, durationMs: 4000, focus: "band-scores" });
+    // Zoom ke AI scoring panel: 4 dimensi band sudah diisi oleh AI.
+    ctx.mark("zoom-ai-band-score", {
+      factor: 1.5,
+      durationMs: 4000,
+      focus: "ai-band-panel",
+    });
+    // Hover over masing-masing dimensi to read the AI scores.
+    const dimensions = [
+      ':text("Task Achievement")',
+      ':text("Coherence")',
+      ':text("Lexical Resource")',
+      ':text("Grammatical Range")',
+    ];
+    for (const d of dimensions) {
+      await ctx.moveTo(d).catch(() => {});
+      await ctx.page.waitForTimeout(700);
+    }
   }
 
   await ctx.padToTarget();
